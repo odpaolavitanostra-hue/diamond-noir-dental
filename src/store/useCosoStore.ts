@@ -126,6 +126,9 @@ export const useCosoStore = create<CosoState>()(
         { name: 'Resina', priceUSD: 45 },
         { name: 'Extracción', priceUSD: 40 },
         { name: 'Endodoncia', priceUSD: 120 },
+        { name: 'Revisión', priceUSD: 25 },
+        { name: 'Blanqueamiento', priceUSD: 80 },
+        { name: 'Prótesis', priceUSD: 200 },
         { name: 'Otros', priceUSD: 0 },
       ],
       

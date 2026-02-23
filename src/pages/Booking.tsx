@@ -40,10 +40,7 @@ const Booking = () => {
       return;
     }
 
-    const priceUSD =
-      form.treatment === "Otros"
-        ? parseFloat(form.customPrice) || 0
-        : selectedTreatment?.priceUSD || 0;
+    const priceUSD = selectedTreatment?.priceUSD || 0;
 
     // Auto-register patient if not exists
     const existingPatient = patients.find(
@@ -180,19 +177,6 @@ const Booking = () => {
                 ))}
               </select>
             </div>
-            {form.treatment === "Otros" && (
-              <div>
-                <label className="block text-sm font-medium mb-1">Precio USD *</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none"
-                  value={form.customPrice}
-                  onChange={(e) => update("customPrice", e.target.value)}
-                />
-              </div>
-            )}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium mb-1">Fecha *</label>
@@ -244,15 +228,17 @@ const Booking = () => {
 
         {/* Map */}
         <div className="mt-8 rounded-xl overflow-hidden gold-border">
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3925.123!2d-64.63!3d10.22!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDEzJzEyLjAiTiA2NMKwMzcnNDguMCJX!5e0!3m2!1ses!2sve!4v1234567890"
-            width="100%"
-            height="250"
-            style={{ border: 0 }}
-            allowFullScreen
-            loading="lazy"
-            title="Ubicación"
-          />
+          <a href="https://maps.app.goo.gl/XCTMewNAjtyAQrqk7" target="_blank" rel="noopener noreferrer">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3925.123!2d-64.63!3d10.22!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDEzJzEyLjAiTiA2NMKwMzcnNDguMCJX!5e0!3m2!1ses!2sve!4v1234567890"
+              width="100%"
+              height="250"
+              style={{ border: 0, pointerEvents: "none" }}
+              allowFullScreen
+              loading="lazy"
+              title="Ubicación"
+            />
+          </a>
         </div>
       </div>
     </div>

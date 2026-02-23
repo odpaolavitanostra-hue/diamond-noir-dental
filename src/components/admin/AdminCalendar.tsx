@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useCosoStore, Appointment } from "@/store/useCosoStore";
-import { CalendarDays, Check, X, Trash2, Edit } from "lucide-react";
+import { CalendarDays, Check, X, Trash2, Edit, DollarSign, Save } from "lucide-react";
 import { toast } from "sonner";
 
 export const AdminCalendar = () => {
-  const { appointments, doctors, updateAppointment, deleteAppointment, completeAppointment, inventory } = useCosoStore();
+  const { appointments, doctors, updateAppointment, deleteAppointment, completeAppointment, inventory, finances, addFinance } = useCosoStore();
   const [filter, setFilter] = useState<string>("all");
   const [completing, setCompleting] = useState<string | null>(null);
   const [materials, setMaterials] = useState<{ itemId: string; qty: number }[]>([]);
+  const [editingPay, setEditingPay] = useState<string | null>(null);
+  const [customDoctorPay, setCustomDoctorPay] = useState<number>(0);
 
   const filtered = appointments
     .filter((a) => filter === "all" || a.status === filter)
@@ -95,6 +97,19 @@ export const AdminCalendar = () => {
                       </button>
                     </div>
                   )}
+                  {app.status === "completada" && (
+                    <button
+                      onClick={() => {
+                        const fin = finances.find((f) => f.appointmentId === app.id);
+                        setEditingPay(app.id);
+                        setCustomDoctorPay(fin?.doctorPayUSD || 0);
+                      }}
+                      className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20"
+                      title="Editar pago al doctor"
+                    >
+                      <DollarSign className="w-4 h-4" />
+                    </button>
+                  )}
                   <button
                     onClick={() => { deleteAppointment(app.id); toast.info("Cita eliminada"); }}
                     className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20"
@@ -104,6 +119,42 @@ export const AdminCalendar = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Edit doctor pay dialog */}
+              {editingPay === app.id && (
+                <div className="mt-4 p-4 bg-muted rounded-lg space-y-3">
+                  <h4 className="font-semibold text-sm">Editar pago al doctor (USD):</h4>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="w-full bg-card rounded-lg px-3 py-2 border border-border text-sm"
+                    value={customDoctorPay}
+                    onChange={(e) => setCustomDoctorPay(parseFloat(e.target.value) || 0)}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        const state = useCosoStore.getState();
+                        const updatedFinances = state.finances.map((f) => {
+                          if (f.appointmentId === app.id) {
+                            const newUtility = f.treatmentPriceUSD - customDoctorPay - f.materialsCostUSD;
+                            return { ...f, doctorPayUSD: customDoctorPay, utilityUSD: newUtility };
+                          }
+                          return f;
+                        });
+                        useCosoStore.setState({ finances: updatedFinances });
+                        setEditingPay(null);
+                        toast.success("Pago al doctor actualizado");
+                      }}
+                      className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"
+                    >
+                      <Save className="w-4 h-4" /> Guardar
+                    </button>
+                    <button onClick={() => setEditingPay(null)} className="bg-muted-foreground/10 text-foreground px-4 py-2 rounded-lg text-sm">Cancelar</button>
+                  </div>
+                </div>
+              )}
 
               {/* Complete dialog */}
               {completing === app.id && (
