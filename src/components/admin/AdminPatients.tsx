@@ -134,9 +134,16 @@ export const AdminPatients = () => {
 
               {/* Clinical history link */}
               {p.clinicalHistoryUrl && (
-                <div className="flex items-center gap-2 text-sm">
-                  <FileText className="w-4 h-4 text-gold" />
-                  <a href={p.clinicalHistoryUrl} target="_blank" rel="noopener noreferrer" className="text-gold underline">Ver Historia Clínica (PDF)</a>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <FileText className="w-4 h-4 text-gold" />
+                    <a href={p.clinicalHistoryUrl} target="_blank" rel="noopener noreferrer" className="text-gold underline">Ver Historia Clínica (PDF)</a>
+                  </div>
+                  <iframe
+                    src={p.clinicalHistoryUrl}
+                    className="w-full h-[400px] rounded-lg border border-border"
+                    title={`Historia clínica de ${p.name}`}
+                  />
                 </div>
               )}
 

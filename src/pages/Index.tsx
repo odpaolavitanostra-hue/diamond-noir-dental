@@ -5,6 +5,9 @@ import serviceLimpieza from "@/assets/service-limpieza.jpg";
 import serviceResina from "@/assets/service-resina.jpg";
 import serviceExtraccion from "@/assets/service-extraccion.jpg";
 import serviceEndodoncia from "@/assets/service-endodoncia.jpg";
+import serviceRevision from "@/assets/service-revision.jpg";
+import serviceBlanqueamiento from "@/assets/service-blanqueamiento.jpg";
+import serviceProtesis from "@/assets/service-protesis.jpg";
 
 const Index = () => {
   return (
@@ -91,12 +94,15 @@ const Index = () => {
           <p className="text-muted-foreground text-center mb-12 max-w-lg mx-auto">
             Ofrecemos tratamientos odontológicos de alta calidad con tecnología moderna.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {[
               { name: "Limpieza Dental", img: serviceLimpieza, desc: "Eliminación de placa y sarro para una sonrisa radiante." },
               { name: "Resina Compuesta", img: serviceResina, desc: "Restauraciones estéticas con materiales de última generación." },
               { name: "Extracción", img: serviceExtraccion, desc: "Procedimientos seguros con mínima molestia." },
               { name: "Endodoncia", img: serviceEndodoncia, desc: "Tratamiento de conductos para salvar tu pieza dental." },
+              { name: "Revisión", img: serviceRevision, desc: "Evaluación completa de tu salud bucal con diagnóstico preciso." },
+              { name: "Blanqueamiento", img: serviceBlanqueamiento, desc: "Ilumina tu sonrisa con tratamientos profesionales seguros." },
+              { name: "Prótesis", img: serviceProtesis, desc: "Soluciones protésicas personalizadas para restaurar tu sonrisa." },
             ].map((s) => (
               <div
                 key={s.name}
@@ -122,16 +128,23 @@ const Index = () => {
             Encuéntranos
           </h2>
           <div className="max-w-4xl mx-auto rounded-xl overflow-hidden gold-border">
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3925.123!2d-64.63!3d10.22!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDEzJzEyLjAiTiA2NMKwMzcnNDguMCJX!5e0!3m2!1ses!2sve!4v1234567890"
-              width="100%"
-              height="350"
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              title="Ubicación de la clínica"
-            />
+            <a
+              href="https://maps.app.goo.gl/XCTMewNAjtyAQrqk7"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full"
+            >
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3925.123!2d-64.63!3d10.22!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDEzJzEyLjAiTiA2NMKwMzcnNDguMCJX!5e0!3m2!1ses!2sve!4v1234567890"
+                width="100%"
+                height="350"
+                style={{ border: 0, pointerEvents: "none" }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Ubicación de la clínica"
+              />
+            </a>
           </div>
         </div>
       </section>
@@ -149,11 +162,16 @@ const Index = () => {
 };
 
 const InfoCard = ({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) => (
-  <div className="glass-card-pearl rounded-xl p-5 text-center">
+  <a
+    href={title === "Ubicación" ? "https://maps.app.goo.gl/XCTMewNAjtyAQrqk7" : undefined}
+    target={title === "Ubicación" ? "_blank" : undefined}
+    rel={title === "Ubicación" ? "noopener noreferrer" : undefined}
+    className="glass-card-pearl rounded-xl p-5 text-center block hover:opacity-90 transition-opacity"
+  >
     <div className="flex items-center justify-center mb-3">{icon}</div>
     <h3 className="font-display font-semibold text-pearl-foreground mb-1">{title}</h3>
     <p className="text-pearl-foreground/70 text-sm">{text}</p>
-  </div>
+  </a>
 );
 
 export default Index;
