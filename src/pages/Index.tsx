@@ -130,13 +130,13 @@ const Index = () => {
           </h2>
           <div className="max-w-4xl mx-auto rounded-xl overflow-hidden gold-border">
             <a
-              href="https://maps.app.goo.gl/XCTMewNAjtyAQrqk7"
+              href="https://maps.app.goo.gl/Ku3FFCzB6b9RB5sm9"
               target="_blank"
               rel="noopener noreferrer"
               className="block w-full"
             >
             <iframe
-              src="https://maps.google.com/maps?q=Novocentro+piso+1+local+1-02+Puerto+La+Cruz+6023+Anzoategui+Venezuela&t=&z=18&ie=UTF8&iwloc=&output=embed"
+              src="https://maps.google.com/maps?q=Cl%C3%ADnica+Odontol%C3%B3gica+Salud+Oriente+Novocentro+Puerto+La+Cruz+Anzoategui+Venezuela&t=&z=18&ie=UTF8&iwloc=&output=embed"
               width="100%"
               height="350"
               style={{ border: 0, pointerEvents: "none" }}
@@ -164,7 +164,7 @@ const Index = () => {
 
 const InfoCard = ({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) => (
   <a
-    href={title === "Ubicación" ? "https://maps.app.goo.gl/XCTMewNAjtyAQrqk7" : undefined}
+    href={title === "Ubicación" ? "https://maps.app.goo.gl/Ku3FFCzB6b9RB5sm9" : undefined}
     target={title === "Ubicación" ? "_blank" : undefined}
     rel={title === "Ubicación" ? "noopener noreferrer" : undefined}
     className="glass-card-pearl rounded-xl p-5 text-center block hover:opacity-90 transition-opacity"
