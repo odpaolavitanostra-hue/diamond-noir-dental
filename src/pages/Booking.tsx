@@ -286,9 +286,9 @@ const Booking = () => {
         </form>
 
         <div className="mt-8 rounded-xl overflow-hidden gold-border">
-          <a href="https://maps.app.goo.gl/XCTMewNAjtyAQrqk7" target="_blank" rel="noopener noreferrer">
+          <a href="https://maps.app.goo.gl/Ku3FFCzB6b9RB5sm9" target="_blank" rel="noopener noreferrer">
             <iframe
-              src="https://maps.google.com/maps?q=Novocentro+piso+1+local+1-02+Puerto+La+Cruz+6023+Anzoategui+Venezuela&t=&z=18&ie=UTF8&iwloc=&output=embed"
+              src="https://maps.google.com/maps?q=Cl%C3%ADnica+Odontol%C3%B3gica+Salud+Oriente+Novocentro+Puerto+La+Cruz+Anzoategui+Venezuela&t=&z=18&ie=UTF8&iwloc=&output=embed"
               width="100%"
               height="250"
               style={{ border: 0, pointerEvents: "none" }}
