@@ -1,23 +1,30 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, CalendarDays, DollarSign, Users, Check, Package, Camera, FileText, Trash2, Save } from "lucide-react";
-import { useCosoStore } from "@/store/useCosoStore";
+import { LogOut, CalendarDays, DollarSign, Users, Check, Package } from "lucide-react";
+import { useClinicData } from "@/hooks/useClinicData";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 const DoctorPanel = () => {
   const navigate = useNavigate();
-  const { appointments, doctors, finances, tasaBCV, patients, updatePatient, completeAppointment, inventory, deductInventory, updateInventoryItem } = useCosoStore();
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { appointments, doctors, finances, tasaBCV, patients, inventory, completeAppointment } = useClinicData();
   const [doctorId, setDoctorId] = useState("");
   const [activeTab, setActiveTab] = useState<"agenda" | "pacientes" | "inventario">("agenda");
   const [completing, setCompleting] = useState<string | null>(null);
   const [materials, setMaterials] = useState<{ itemId: string; qty: number }[]>([]);
-  const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
 
   useEffect(() => {
-    const auth = sessionStorage.getItem("coso-auth");
-    if (!auth?.startsWith("doctor:")) { navigate("/login"); return; }
-    setDoctorId(auth.split(":")[1]);
-  }, [navigate]);
+    if (!authLoading && !user) {
+      navigate("/login");
+    }
+  }, [authLoading, user, navigate]);
+
+  // Auto-select first doctor if none selected
+  useEffect(() => {
+    if (!doctorId && doctors.length > 0) setDoctorId(doctors[0].id);
+  }, [doctors, doctorId]);
 
   const doctor = doctors.find((d) => d.id === doctorId);
   const myAppointments = appointments.filter((a) => a.doctorId === doctorId);
@@ -32,12 +39,11 @@ const DoctorPanel = () => {
   const pendingCount = myAppointments.filter((a) => a.status === "pendiente").length;
   const completedCount = myAppointments.filter((a) => a.status === "completada").length;
 
-  const handleLogout = () => { sessionStorage.removeItem("coso-auth"); navigate("/"); };
+  const handleLogout = async () => { await signOut(); navigate("/"); };
 
-  const handleComplete = (id: string) => {
-    completeAppointment(id, materials);
-    const store = useCosoStore.getState();
-    store.inventory.forEach((item) => {
+  const handleComplete = async (id: string) => {
+    await completeAppointment(id, materials);
+    inventory.forEach((item) => {
       if (item.stock <= item.minStock) toast.warning(`⚠️ Stock bajo: ${item.name} (${item.stock})`);
     });
     toast.success("Cita completada");
@@ -45,50 +51,25 @@ const DoctorPanel = () => {
     setMaterials([]);
   };
 
-  const handlePhotoUpload = (patientId: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { toast.error("Máximo 2MB por imagen"); return; }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const patient = patients.find((p) => p.id === patientId);
-      if (patient) {
-        updatePatient(patientId, { photos: [...patient.photos, reader.result as string] });
-        toast.success("Foto añadida");
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handlePdfUpload = (patientId: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error("Máximo 5MB por PDF"); return; }
-    const reader = new FileReader();
-    reader.onload = () => {
-      updatePatient(patientId, { clinicalHistoryUrl: reader.result as string });
-      toast.success("Historia clínica actualizada");
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const removePhoto = (patientId: string, index: number) => {
-    const patient = patients.find((p) => p.id === patientId);
-    if (patient) {
-      const newPhotos = patient.photos.filter((_, i) => i !== index);
-      updatePatient(patientId, { photos: newPhotos });
-      toast.success("Foto eliminada");
-    }
-  };
-
-  if (!doctor) return null;
+  if (authLoading) return <div className="min-h-screen bg-background flex items-center justify-center"><p className="text-muted-foreground">Cargando...</p></div>;
+  if (!user || !doctor) return null;
 
   return (
     <div className="min-h-screen bg-background font-body">
       <header className="noir-gradient py-4">
         <div className="container mx-auto px-4 flex items-center justify-between">
           <div>
-            <h1 className="font-display text-xl text-gold font-semibold">{doctor.name}</h1>
+            <div className="flex items-center gap-3 mb-1">
+              <select
+                className="bg-transparent text-gold font-display text-xl font-semibold border-none focus:outline-none"
+                value={doctorId}
+                onChange={(e) => setDoctorId(e.target.value)}
+              >
+                {doctors.map((d) => (
+                  <option key={d.id} value={d.id} className="bg-noir text-noir-foreground">{d.name}</option>
+                ))}
+              </select>
+            </div>
             <p className="text-noir-foreground/50 text-sm">{doctor.specialty}</p>
           </div>
           <button onClick={handleLogout} className="text-noir-foreground/60 hover:text-gold transition-colors flex items-center gap-1 text-sm">
@@ -148,7 +129,6 @@ const DoctorPanel = () => {
                     </div>
                   </div>
 
-                  {/* Complete with materials */}
                   {completing === app.id && (
                     <div className="mt-4 p-4 bg-muted rounded-lg space-y-3">
                       <h4 className="font-semibold text-sm">Materiales utilizados:</h4>
@@ -183,54 +163,10 @@ const DoctorPanel = () => {
               <p className="text-muted-foreground text-center py-8">No tienes pacientes asignados</p>
             ) : (
               myPatients.map((p) => (
-                <div key={p.id} className="bg-card rounded-xl p-5 gold-border space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-semibold">{p.name}</p>
-                      <p className="text-sm text-muted-foreground">Cédula: {p.cedula || "—"} • Tel: {p.phone || "—"}</p>
-                      <p className="text-sm text-muted-foreground">{p.email || "—"}</p>
-                    </div>
-                    <button onClick={() => setSelectedPatient(selectedPatient === p.id ? null : p.id)} className="text-xs bg-gold/10 text-gold px-3 py-1.5 rounded-lg font-semibold hover:bg-gold/20">
-                      {selectedPatient === p.id ? "Cerrar" : "Gestionar"}
-                    </button>
-                  </div>
-
-                  {selectedPatient === p.id && (
-                    <div className="space-y-4 pt-2">
-                      {/* Photos */}
-                      <div>
-                        <h4 className="font-semibold text-sm flex items-center gap-1 mb-2"><Camera className="w-4 h-4 text-gold" /> Fotos del Proceso</h4>
-                        <div className="flex flex-wrap gap-2 mb-2">
-                          {p.photos.map((photo, i) => (
-                            <div key={i} className="relative group">
-                              <img src={photo} alt={`Foto ${i + 1}`} className="w-20 h-20 object-cover rounded-lg border border-border" />
-                              <button onClick={() => removePhoto(p.id, i)} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Trash2 className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                        <label className="inline-flex items-center gap-1 bg-muted px-3 py-2 rounded-lg text-sm cursor-pointer hover:bg-muted/80 border border-border">
-                          <Camera className="w-4 h-4" /> Subir Foto
-                          <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoUpload(p.id, e)} />
-                        </label>
-                      </div>
-
-                      {/* Clinical History PDF */}
-                      <div>
-                        <h4 className="font-semibold text-sm flex items-center gap-1 mb-2"><FileText className="w-4 h-4 text-gold" /> Historia Clínica (PDF)</h4>
-                        {p.clinicalHistoryUrl && (
-                          <div className="mb-2">
-                            <a href={p.clinicalHistoryUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-gold underline">Ver historia clínica actual</a>
-                          </div>
-                        )}
-                        <label className="inline-flex items-center gap-1 bg-muted px-3 py-2 rounded-lg text-sm cursor-pointer hover:bg-muted/80 border border-border">
-                          <FileText className="w-4 h-4" /> {p.clinicalHistoryUrl ? "Reemplazar PDF" : "Subir PDF"}
-                          <input type="file" accept="application/pdf" className="hidden" onChange={(e) => handlePdfUpload(p.id, e)} />
-                        </label>
-                      </div>
-                    </div>
-                  )}
+                <div key={p.id} className="bg-card rounded-xl p-5 gold-border">
+                  <p className="font-semibold">{p.name}</p>
+                  <p className="text-sm text-muted-foreground">Cédula: {p.cedula || "—"} • Tel: {p.phone || "—"}</p>
+                  <p className="text-sm text-muted-foreground">{p.email || "—"}</p>
                 </div>
               ))
             )}
@@ -240,7 +176,7 @@ const DoctorPanel = () => {
         {/* INVENTARIO */}
         {activeTab === "inventario" && (
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">Consulta y actualiza el inventario de materiales.</p>
+            <p className="text-sm text-muted-foreground">Consulta el inventario de materiales.</p>
             {inventory.map((item) => (
               <div key={item.id} className="bg-card rounded-xl p-4 gold-border flex items-center justify-between gap-3 flex-wrap">
                 <div>

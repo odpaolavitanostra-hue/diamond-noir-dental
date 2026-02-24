@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { useCosoStore } from "@/store/useCosoStore";
+import { useClinicData } from "@/hooks/useClinicData";
 import { DollarSign, Download, Plus, Trash2, BookOpen, ShoppingCart, Receipt, Building2 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
@@ -16,7 +17,7 @@ interface AccountingEntry {
 const generateId = () => Math.random().toString(36).substring(2, 10);
 
 export const AdminFinances = () => {
-  const { finances, appointments, doctors, tasaBCV, setTasaBCV } = useCosoStore();
+  const { finances, appointments, doctors, tasaBCV, setTasaBCV } = useClinicData();
 
   const [activeTab, setActiveTab] = useState<"resumen" | "compras" | "ventas" | "alquileres">("resumen");
   const [purchases, setPurchases] = useState<AccountingEntry[]>(() => {
@@ -70,6 +71,10 @@ export const AdminFinances = () => {
     XLSX.writeFile(wb, `contabilidad_COSO_${new Date().toISOString().split("T")[0]}.xlsx`);
   };
 
+  const handleSetTasaBCV = async (value: number) => {
+    await setTasaBCV(value);
+  };
+
   const renderEntryForm = (type: "compras" | "ventas") => (
     <div className="bg-muted rounded-lg p-4 space-y-3 mb-4">
       <h4 className="text-sm font-semibold">Nuevo registro</h4>
@@ -116,13 +121,12 @@ export const AdminFinances = () => {
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2 bg-card rounded-lg px-3 py-2 gold-border">
             <span className="text-sm font-medium">Tasa BCV:</span>
-            <input type="number" step="0.01" className="w-24 bg-muted rounded px-2 py-1 text-sm border border-border text-center" value={tasaBCV} onChange={(e) => setTasaBCV(parseFloat(e.target.value) || 0)} />
+            <input type="number" step="0.01" className="w-24 bg-muted rounded px-2 py-1 text-sm border border-border text-center" value={tasaBCV} onChange={(e) => handleSetTasaBCV(parseFloat(e.target.value) || 0)} />
           </div>
           <button onClick={exportXLSX} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Download className="w-4 h-4" /> XLSX</button>
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-2 mb-6 flex-wrap">
         {[
           { key: "resumen" as const, label: "Resumen", icon: <BookOpen className="w-4 h-4" /> },

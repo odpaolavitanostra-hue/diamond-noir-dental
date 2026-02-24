@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -11,6 +12,7 @@ import { AdminPatients } from "@/components/admin/AdminPatients";
 import { AdminInventory } from "@/components/admin/AdminInventory";
 import { AdminFinances } from "@/components/admin/AdminFinances";
 import { AdminSettings } from "@/components/admin/AdminSettings";
+import { useAuth } from "@/hooks/useAuth";
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -24,19 +26,23 @@ const tabs = [
 
 const Admin = () => {
   const navigate = useNavigate();
+  const { user, loading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    if (sessionStorage.getItem("coso-auth") !== "admin") {
+    if (!loading && !user) {
       navigate("/login");
     }
-  }, [navigate]);
+  }, [loading, user, navigate]);
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("coso-auth");
+  const handleLogout = async () => {
+    await signOut();
     navigate("/");
   };
+
+  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><p className="text-muted-foreground">Cargando...</p></div>;
+  if (!user) return null;
 
   const renderContent = () => {
     switch (activeTab) {

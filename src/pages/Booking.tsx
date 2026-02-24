@@ -1,11 +1,13 @@
+
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, CalendarDays, Clock, User, Phone, Stethoscope, Mail, CreditCard } from "lucide-react";
-import { useCosoStore } from "@/store/useCosoStore";
+import { useClinicData } from "@/hooks/useClinicData";
+import { validateSlot, validateSchedule, isSlotBlockedByTenant, getCaracasNow, getCaracasToday } from "@/lib/scheduleUtils";
 import { toast } from "sonner";
 
 const Booking = () => {
-  const { doctors, treatments, validateSlot, validateSchedule, addAppointment, patients, addPatient, appointments, isSlotBlockedByTenant, getCaracasNow, getCaracasToday } = useCosoStore();
+  const { doctors, treatments, appointments, patients, addAppointment, addPatient, tenants } = useClinicData();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialTreatment = searchParams.get("tratamiento") || treatments[0]?.name || "";
@@ -15,16 +17,20 @@ const Booking = () => {
     patientCedula: "",
     patientPhone: "",
     patientEmail: "",
-    doctorId: doctors[0]?.id || "",
+    doctorId: "",
     date: "",
     time: "",
     treatment: initialTreatment,
     notes: "",
   });
 
-  const selectedTreatment = treatments.find((t) => t.name === form.treatment);
+  // Update doctorId when doctors load
+  const effectiveDoctorId = form.doctorId || doctors[0]?.id || "";
+  const effectiveTreatment = form.treatment || treatments[0]?.name || "";
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const selectedTreatment = treatments.find((t) => t.name === effectiveTreatment);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!form.patientName || !form.patientCedula || !form.patientPhone || !form.patientEmail || !form.date || !form.time) {
@@ -38,13 +44,13 @@ const Booking = () => {
       return;
     }
 
-    const tenantCheck = isSlotBlockedByTenant(form.date, form.time);
+    const tenantCheck = isSlotBlockedByTenant(form.date, form.time, tenants);
     if (tenantCheck.blocked) {
       toast.error("Este horario está reservado. Selecciona otro.");
       return;
     }
 
-    if (!validateSlot(form.date, form.time)) {
+    if (!validateSlot(form.date, form.time, appointments, tenants)) {
       toast.error("Ya existe una cita en ese horario. Debe haber al menos 60 min de diferencia.");
       return;
     }
@@ -55,8 +61,7 @@ const Booking = () => {
       (p) => p.cedula === form.patientCedula.trim() || p.phone === form.patientPhone.trim() || p.name.toLowerCase() === form.patientName.trim().toLowerCase()
     );
     if (!existingPatient) {
-      addPatient({
-        id: Math.random().toString(36).substring(2, 10),
+      await addPatient({
         name: form.patientName.trim(),
         cedula: form.patientCedula.trim(),
         phone: form.patientPhone.trim(),
@@ -67,16 +72,15 @@ const Booking = () => {
       });
     }
 
-    addAppointment({
-      id: Math.random().toString(36).substring(2, 10),
+    await addAppointment({
       patientName: form.patientName.trim(),
       patientPhone: form.patientPhone.trim(),
       patientCedula: form.patientCedula.trim(),
       patientEmail: form.patientEmail.trim(),
-      doctorId: form.doctorId,
+      doctorId: effectiveDoctorId,
       date: form.date,
       time: form.time,
-      treatment: form.treatment,
+      treatment: effectiveTreatment,
       priceUSD,
       status: "pendiente",
       notes: form.notes,
@@ -102,16 +106,10 @@ const Booking = () => {
     const currentHour = caracasNow.getHours();
 
     for (let h = 8; h < end; h++) {
-      // Block past hours for today
       if (isToday && h <= currentHour) continue;
-
       const time = `${h.toString().padStart(2, "0")}:00`;
-
-      // Check tenant blocks
-      const tenantCheck = isSlotBlockedByTenant(form.date, time);
+      const tenantCheck = isSlotBlockedByTenant(form.date, time, tenants);
       if (tenantCheck.blocked) continue;
-
-      // Check if already booked
       const isBooked = appointments.some(
         (a) => a.date === form.date && a.time === time && a.status !== "cancelada"
       );
@@ -144,55 +142,19 @@ const Booking = () => {
             </h2>
             <div>
               <label className="block text-sm font-medium mb-1">Nombre completo *</label>
-              <input
-                type="text"
-                className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors"
-                value={form.patientName}
-                onChange={(e) => update("patientName", e.target.value)}
-                required
-                maxLength={100}
-              />
+              <input type="text" className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors" value={form.patientName} onChange={(e) => update("patientName", e.target.value)} required maxLength={100} />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 flex items-center gap-1">
-                <CreditCard className="w-4 h-4" /> Cédula *
-              </label>
-              <input
-                type="text"
-                className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors"
-                value={form.patientCedula}
-                onChange={(e) => update("patientCedula", e.target.value)}
-                required
-                maxLength={20}
-                placeholder="V-12345678"
-              />
+              <label className="block text-sm font-medium mb-1 flex items-center gap-1"><CreditCard className="w-4 h-4" /> Cédula *</label>
+              <input type="text" className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors" value={form.patientCedula} onChange={(e) => update("patientCedula", e.target.value)} required maxLength={20} placeholder="V-12345678" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 flex items-center gap-1">
-                <Phone className="w-4 h-4" /> Teléfono *
-              </label>
-              <input
-                type="tel"
-                className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors"
-                value={form.patientPhone}
-                onChange={(e) => update("patientPhone", e.target.value)}
-                required
-                maxLength={20}
-              />
+              <label className="block text-sm font-medium mb-1 flex items-center gap-1"><Phone className="w-4 h-4" /> Teléfono *</label>
+              <input type="tel" className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors" value={form.patientPhone} onChange={(e) => update("patientPhone", e.target.value)} required maxLength={20} />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 flex items-center gap-1">
-                <Mail className="w-4 h-4" /> Email *
-              </label>
-              <input
-                type="email"
-                className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors"
-                value={form.patientEmail}
-                onChange={(e) => update("patientEmail", e.target.value)}
-                required
-                maxLength={100}
-                placeholder="correo@ejemplo.com"
-              />
+              <label className="block text-sm font-medium mb-1 flex items-center gap-1"><Mail className="w-4 h-4" /> Email *</label>
+              <input type="email" className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors" value={form.patientEmail} onChange={(e) => update("patientEmail", e.target.value)} required maxLength={100} placeholder="correo@ejemplo.com" />
             </div>
           </div>
 
@@ -203,58 +165,28 @@ const Booking = () => {
             </h2>
             <div>
               <label className="block text-sm font-medium mb-1">Doctor *</label>
-              <select
-                className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none"
-                value={form.doctorId}
-                onChange={(e) => update("doctorId", e.target.value)}
-              >
+              <select className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none" value={effectiveDoctorId} onChange={(e) => update("doctorId", e.target.value)}>
                 {doctors.map((d) => (
                   <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 flex items-center gap-1">
-                <Stethoscope className="w-4 h-4" /> Tratamiento *
-              </label>
-              <select
-                className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none"
-                value={form.treatment}
-                onChange={(e) => update("treatment", e.target.value)}
-              >
-                {[...treatments]
-                  .sort((a, b) => {
-                    if (a.name === "Otros") return 1;
-                    if (b.name === "Otros") return -1;
-                    return a.name.localeCompare(b.name, "es");
-                  })
-                  .map((t) => (
-                    <option key={t.name} value={t.name}>{t.name}</option>
-                  ))}
+              <label className="block text-sm font-medium mb-1 flex items-center gap-1"><Stethoscope className="w-4 h-4" /> Tratamiento *</label>
+              <select className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none" value={effectiveTreatment} onChange={(e) => update("treatment", e.target.value)}>
+                {[...treatments].sort((a, b) => { if (a.name === "Otros") return 1; if (b.name === "Otros") return -1; return a.name.localeCompare(b.name, "es"); }).map((t) => (
+                  <option key={t.name} value={t.name}>{t.name}</option>
+                ))}
               </select>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium mb-1">Fecha *</label>
-                <input
-                  type="date"
-                  min={caracasToday}
-                  className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none"
-                  value={form.date}
-                  onChange={(e) => { update("date", e.target.value); update("time", ""); }}
-                  required
-                />
+                <input type="date" min={caracasToday} className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none" value={form.date} onChange={(e) => { update("date", e.target.value); update("time", ""); }} required />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1 flex items-center gap-1">
-                  <Clock className="w-4 h-4" /> Hora *
-                </label>
-                <select
-                  className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none"
-                  value={form.time}
-                  onChange={(e) => update("time", e.target.value)}
-                  required
-                >
+                <label className="block text-sm font-medium mb-1 flex items-center gap-1"><Clock className="w-4 h-4" /> Hora *</label>
+                <select className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none" value={form.time} onChange={(e) => update("time", e.target.value)} required>
                   <option value="">Seleccionar</option>
                   {getTimeSlots().map((t) => (
                     <option key={t} value={t}>{t}</option>
@@ -267,20 +199,11 @@ const Booking = () => {
             )}
             <div>
               <label className="block text-sm font-medium mb-1">Notas (opcional)</label>
-              <textarea
-                className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none resize-none"
-                rows={3}
-                value={form.notes}
-                onChange={(e) => update("notes", e.target.value)}
-                maxLength={500}
-              />
+              <textarea className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none resize-none" rows={3} value={form.notes} onChange={(e) => update("notes", e.target.value)} maxLength={500} />
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="w-full bg-gold text-gold-foreground py-4 rounded-xl font-semibold text-lg hover:opacity-90 transition-opacity"
-          >
+          <button type="submit" className="w-full bg-gold text-gold-foreground py-4 rounded-xl font-semibold text-lg hover:opacity-90 transition-opacity">
             Confirmar Cita
           </button>
         </form>

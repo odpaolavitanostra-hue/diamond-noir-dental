@@ -1,24 +1,25 @@
+
 import { useState } from "react";
-import { useCosoStore, InventoryItem } from "@/store/useCosoStore";
+import { useClinicData, InventoryItem } from "@/hooks/useClinicData";
 import { Package, Plus, Trash2, Edit, Save, X, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 export const AdminInventory = () => {
-  const { inventory, addInventoryItem, updateInventoryItem, deleteInventoryItem } = useCosoStore();
+  const { inventory, addInventoryItem, updateInventoryItem, deleteInventoryItem } = useClinicData();
   const [editing, setEditing] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({ name: "", stock: 0, priceUSD: 0, minStock: 10 });
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!form.name) { toast.error("Nombre requerido"); return; }
-    addInventoryItem({ id: Math.random().toString(36).substring(2, 10), ...form });
+    await addInventoryItem(form);
     setAdding(false);
     setForm({ name: "", stock: 0, priceUSD: 0, minStock: 10 });
     toast.success("Item agregado");
   };
 
-  const handleUpdate = (id: string) => {
-    updateInventoryItem(id, form);
+  const handleUpdate = async (id: string) => {
+    await updateInventoryItem(id, form);
     setEditing(null);
     toast.success("Item actualizado");
   };
@@ -62,18 +63,14 @@ export const AdminInventory = () => {
               <div className="flex items-center gap-2">
                 <p className="font-semibold">{item.name}</p>
                 {item.stock <= item.minStock && (
-                  <span className="flex items-center gap-1 text-xs text-gold font-semibold">
-                    <AlertTriangle className="w-3 h-3" /> Stock bajo
-                  </span>
+                  <span className="flex items-center gap-1 text-xs text-gold font-semibold"><AlertTriangle className="w-3 h-3" /> Stock bajo</span>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground">
-                Stock: {item.stock} • Mín: {item.minStock} • ${item.priceUSD.toFixed(2)} USD
-              </p>
+              <p className="text-sm text-muted-foreground">Stock: {item.stock} • Mín: {item.minStock} • ${item.priceUSD.toFixed(2)} USD</p>
             </div>
             <div className="flex gap-1">
               <button onClick={() => startEdit(item)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20"><Edit className="w-4 h-4" /></button>
-              <button onClick={() => { deleteInventoryItem(item.id); toast.info("Item eliminado"); }} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20"><Trash2 className="w-4 h-4" /></button>
+              <button onClick={async () => { await deleteInventoryItem(item.id); toast.info("Item eliminado"); }} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20"><Trash2 className="w-4 h-4" /></button>
             </div>
           </div>
         ))}

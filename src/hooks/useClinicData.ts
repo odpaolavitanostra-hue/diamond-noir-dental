@@ -1,0 +1,437 @@
+
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+// Types matching the old store interface (camelCase)
+export interface Doctor {
+  id: string;
+  email: string;
+  name: string;
+  specialty: string;
+  payModel: 'fixed' | 'percent';
+  rate: number;
+}
+
+export interface Patient {
+  id: string;
+  name: string;
+  cedula: string;
+  phone: string;
+  email: string;
+  notes: string;
+  photos: string[];
+  clinicalHistoryUrl: string;
+}
+
+export interface InventoryItem {
+  id: string;
+  name: string;
+  stock: number;
+  priceUSD: number;
+  minStock: number;
+}
+
+export interface Treatment {
+  id: string;
+  name: string;
+  priceUSD: number;
+}
+
+export interface Appointment {
+  id: string;
+  patientName: string;
+  patientPhone: string;
+  patientCedula?: string;
+  patientEmail?: string;
+  doctorId: string;
+  date: string;
+  time: string;
+  treatment: string;
+  priceUSD: number;
+  status: 'pendiente' | 'completada' | 'cancelada';
+  materialsUsed?: { itemId: string; qty: number }[];
+  notes: string;
+}
+
+export interface FinanceRecord {
+  id: string;
+  appointmentId: string;
+  date: string;
+  treatmentPriceUSD: number;
+  doctorPayUSD: number;
+  materialsCostUSD: number;
+  utilityUSD: number;
+  tasaBCV: number;
+}
+
+export interface TenantBlockedSlot {
+  id: string;
+  date: string;
+  allDay: boolean;
+  startTime?: string;
+  endTime?: string;
+}
+
+export interface Tenant {
+  id: string;
+  firstName: string;
+  lastName: string;
+  cov: string;
+  email: string;
+  phone: string;
+  cedula: string;
+  rentalMode: 'turno' | 'percent';
+  rentalPrice: number;
+  blockedSlots: TenantBlockedSlot[];
+}
+
+export function useClinicData() {
+  const qc = useQueryClient();
+
+  // ─── Queries ───
+  const { data: doctors = [], isLoading: loadingDoctors } = useQuery({
+    queryKey: ["doctors"],
+    queryFn: async () => {
+      const { data } = await supabase.from("doctors").select("*");
+      return (data || []).map(d => ({
+        id: d.id, email: d.email, name: d.name, specialty: d.specialty,
+        payModel: d.pay_model as 'fixed' | 'percent', rate: d.rate,
+      })) as Doctor[];
+    },
+  });
+
+  const { data: treatments = [] } = useQuery({
+    queryKey: ["treatments"],
+    queryFn: async () => {
+      const { data } = await supabase.from("treatments").select("*");
+      return (data || []).map(t => ({
+        id: t.id, name: t.name, priceUSD: t.price_usd,
+      })) as Treatment[];
+    },
+  });
+
+  const { data: appointments = [] } = useQuery({
+    queryKey: ["appointments"],
+    queryFn: async () => {
+      const { data } = await supabase.from("appointments").select("*");
+      return (data || []).map(a => ({
+        id: a.id, patientName: a.patient_name, patientPhone: a.patient_phone,
+        patientCedula: a.patient_cedula || undefined, patientEmail: a.patient_email || undefined,
+        doctorId: a.doctor_id || '', date: a.date, time: a.time, treatment: a.treatment,
+        priceUSD: a.price_usd, status: a.status as Appointment['status'],
+        materialsUsed: a.materials_used as any, notes: a.notes,
+      })) as Appointment[];
+    },
+  });
+
+  const { data: patients = [] } = useQuery({
+    queryKey: ["patients"],
+    queryFn: async () => {
+      const { data } = await supabase.from("patients").select("*");
+      return (data || []).map(p => ({
+        id: p.id, name: p.name, cedula: p.cedula, phone: p.phone,
+        email: p.email, notes: p.notes, photos: p.photos || [],
+        clinicalHistoryUrl: p.clinical_history_url,
+      })) as Patient[];
+    },
+  });
+
+  const { data: inventory = [] } = useQuery({
+    queryKey: ["inventory"],
+    queryFn: async () => {
+      const { data } = await supabase.from("inventory").select("*");
+      return (data || []).map(i => ({
+        id: i.id, name: i.name, stock: i.stock,
+        priceUSD: i.price_usd, minStock: i.min_stock,
+      })) as InventoryItem[];
+    },
+  });
+
+  const { data: finances = [] } = useQuery({
+    queryKey: ["finances"],
+    queryFn: async () => {
+      const { data } = await supabase.from("finances").select("*");
+      return (data || []).map(f => ({
+        id: f.id, appointmentId: f.appointment_id || '',
+        date: f.date, treatmentPriceUSD: f.treatment_price_usd,
+        doctorPayUSD: f.doctor_pay_usd, materialsCostUSD: f.materials_cost_usd,
+        utilityUSD: f.utility_usd, tasaBCV: f.tasa_bcv,
+      })) as FinanceRecord[];
+    },
+  });
+
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: async () => {
+      const { data } = await supabase.from("settings").select("*").limit(1).single();
+      return data;
+    },
+  });
+
+  const { data: rawTenants = [] } = useQuery({
+    queryKey: ["tenants"],
+    queryFn: async () => {
+      const { data } = await supabase.from("tenants").select("*");
+      return data || [];
+    },
+  });
+
+  const { data: blockedSlots = [] } = useQuery({
+    queryKey: ["tenant_blocked_slots"],
+    queryFn: async () => {
+      const { data } = await supabase.from("tenant_blocked_slots").select("*");
+      return data || [];
+    },
+  });
+
+  const tenants: Tenant[] = rawTenants.map(t => ({
+    id: t.id, firstName: t.first_name, lastName: t.last_name,
+    cov: t.cov, email: t.email, phone: t.phone, cedula: t.cedula,
+    rentalMode: t.rental_mode as 'turno' | 'percent', rentalPrice: t.rental_price,
+    blockedSlots: blockedSlots
+      .filter(s => s.tenant_id === t.id)
+      .map(s => ({
+        id: s.id, date: s.date, allDay: s.all_day,
+        startTime: s.start_time || undefined, endTime: s.end_time || undefined,
+      })),
+  }));
+
+  const tasaBCV = settings?.tasa_bcv ?? 36.50;
+
+  const inv = (...keys: string[]) => keys.forEach(k => qc.invalidateQueries({ queryKey: [k] }));
+
+  // ─── Doctor CRUD ───
+  const addDoctor = async (doc: Omit<Doctor, 'id'>) => {
+    await supabase.from("doctors").insert({
+      name: doc.name, email: doc.email, specialty: doc.specialty,
+      pay_model: doc.payModel, rate: doc.rate,
+    });
+    inv("doctors");
+  };
+  const updateDoctor = async (id: string, doc: Partial<Doctor>) => {
+    const mapped: any = {};
+    if (doc.name !== undefined) mapped.name = doc.name;
+    if (doc.email !== undefined) mapped.email = doc.email;
+    if (doc.specialty !== undefined) mapped.specialty = doc.specialty;
+    if (doc.payModel !== undefined) mapped.pay_model = doc.payModel;
+    if (doc.rate !== undefined) mapped.rate = doc.rate;
+    await supabase.from("doctors").update(mapped).eq("id", id);
+    inv("doctors");
+  };
+  const deleteDoctor = async (id: string) => {
+    await supabase.from("doctors").delete().eq("id", id);
+    inv("doctors");
+  };
+
+  // ─── Patient CRUD ───
+  const addPatient = async (p: Omit<Patient, 'id'>) => {
+    await supabase.from("patients").insert({
+      name: p.name, cedula: p.cedula, phone: p.phone, email: p.email,
+      notes: p.notes, photos: p.photos, clinical_history_url: p.clinicalHistoryUrl,
+    });
+    inv("patients");
+  };
+  const updatePatient = async (id: string, p: Partial<Patient>) => {
+    const mapped: any = {};
+    if (p.name !== undefined) mapped.name = p.name;
+    if (p.cedula !== undefined) mapped.cedula = p.cedula;
+    if (p.phone !== undefined) mapped.phone = p.phone;
+    if (p.email !== undefined) mapped.email = p.email;
+    if (p.notes !== undefined) mapped.notes = p.notes;
+    if (p.photos !== undefined) mapped.photos = p.photos;
+    if (p.clinicalHistoryUrl !== undefined) mapped.clinical_history_url = p.clinicalHistoryUrl;
+    await supabase.from("patients").update(mapped).eq("id", id);
+    inv("patients");
+  };
+  const deletePatient = async (id: string) => {
+    await supabase.from("patients").delete().eq("id", id);
+    inv("patients");
+  };
+
+  // ─── Inventory CRUD ───
+  const addInventoryItem = async (item: Omit<InventoryItem, 'id'>) => {
+    await supabase.from("inventory").insert({
+      name: item.name, stock: item.stock, price_usd: item.priceUSD, min_stock: item.minStock,
+    });
+    inv("inventory");
+  };
+  const updateInventoryItem = async (id: string, item: Partial<InventoryItem>) => {
+    const mapped: any = {};
+    if (item.name !== undefined) mapped.name = item.name;
+    if (item.stock !== undefined) mapped.stock = item.stock;
+    if (item.priceUSD !== undefined) mapped.price_usd = item.priceUSD;
+    if (item.minStock !== undefined) mapped.min_stock = item.minStock;
+    await supabase.from("inventory").update(mapped).eq("id", id);
+    inv("inventory");
+  };
+  const deleteInventoryItem = async (id: string) => {
+    await supabase.from("inventory").delete().eq("id", id);
+    inv("inventory");
+  };
+
+  // ─── Appointment CRUD ───
+  const addAppointment = async (app: Omit<Appointment, 'id'>) => {
+    await supabase.from("appointments").insert({
+      patient_name: app.patientName, patient_phone: app.patientPhone,
+      patient_cedula: app.patientCedula, patient_email: app.patientEmail,
+      doctor_id: app.doctorId, date: app.date, time: app.time,
+      treatment: app.treatment, price_usd: app.priceUSD,
+      status: app.status, notes: app.notes,
+    });
+    inv("appointments");
+  };
+  const updateAppointment = async (id: string, app: Partial<Appointment>) => {
+    const mapped: any = {};
+    if (app.patientName !== undefined) mapped.patient_name = app.patientName;
+    if (app.patientPhone !== undefined) mapped.patient_phone = app.patientPhone;
+    if (app.doctorId !== undefined) mapped.doctor_id = app.doctorId;
+    if (app.status !== undefined) mapped.status = app.status;
+    if (app.materialsUsed !== undefined) mapped.materials_used = app.materialsUsed;
+    if (app.notes !== undefined) mapped.notes = app.notes;
+    if (app.priceUSD !== undefined) mapped.price_usd = app.priceUSD;
+    await supabase.from("appointments").update(mapped).eq("id", id);
+    inv("appointments");
+  };
+  const deleteAppointment = async (id: string) => {
+    await supabase.from("appointments").delete().eq("id", id);
+    inv("appointments");
+  };
+
+  const completeAppointment = async (id: string, materialsUsed: { itemId: string; qty: number }[]) => {
+    const app = appointments.find(a => a.id === id);
+    if (!app) return;
+
+    // Deduct inventory
+    for (const { itemId, qty } of materialsUsed) {
+      const item = inventory.find(i => i.id === itemId);
+      if (item) {
+        await supabase.from("inventory").update({
+          stock: Math.round((item.stock - qty) * 100) / 100,
+        }).eq("id", itemId);
+      }
+    }
+
+    // Calculate finance
+    const doctor = doctors.find(d => d.id === app.doctorId);
+    const doctorPayUSD = doctor
+      ? doctor.payModel === 'percent' ? app.priceUSD * doctor.rate : doctor.rate
+      : 0;
+    const materialsCostUSD = materialsUsed.reduce((sum, { itemId, qty }) => {
+      const item = inventory.find(i => i.id === itemId);
+      return sum + (item ? item.priceUSD * qty : 0);
+    }, 0);
+    const utilityUSD = app.priceUSD - doctorPayUSD - materialsCostUSD;
+
+    // Create finance record
+    await supabase.from("finances").insert({
+      appointment_id: id, date: app.date,
+      treatment_price_usd: app.priceUSD, doctor_pay_usd: doctorPayUSD,
+      materials_cost_usd: materialsCostUSD, utility_usd: utilityUSD,
+      tasa_bcv: tasaBCV,
+    });
+
+    // Update appointment status
+    await supabase.from("appointments").update({
+      status: 'completada', materials_used: materialsUsed,
+    }).eq("id", id);
+
+    inv("appointments", "finances", "inventory");
+  };
+
+  // ─── Treatment ───
+  const updateTreatment = async (name: string, priceUSD: number) => {
+    await supabase.from("treatments").update({ price_usd: priceUSD }).eq("name", name);
+    inv("treatments");
+  };
+
+  // ─── Finance ───
+  const addFinance = async (f: Omit<FinanceRecord, 'id'>) => {
+    await supabase.from("finances").insert({
+      appointment_id: f.appointmentId, date: f.date,
+      treatment_price_usd: f.treatmentPriceUSD, doctor_pay_usd: f.doctorPayUSD,
+      materials_cost_usd: f.materialsCostUSD, utility_usd: f.utilityUSD,
+      tasa_bcv: f.tasaBCV,
+    });
+    inv("finances");
+  };
+
+  const updateFinance = async (appointmentId: string, updates: Partial<FinanceRecord>) => {
+    const mapped: any = {};
+    if (updates.doctorPayUSD !== undefined) mapped.doctor_pay_usd = updates.doctorPayUSD;
+    if (updates.utilityUSD !== undefined) mapped.utility_usd = updates.utilityUSD;
+    if (updates.materialsCostUSD !== undefined) mapped.materials_cost_usd = updates.materialsCostUSD;
+    await supabase.from("finances").update(mapped).eq("appointment_id", appointmentId);
+    inv("finances");
+  };
+
+  // ─── Settings ───
+  const setTasaBCV = async (tasa: number) => {
+    if (settings?.id) {
+      await supabase.from("settings").update({ tasa_bcv: tasa }).eq("id", settings.id);
+    }
+    inv("settings");
+  };
+
+  // ─── Tenant CRUD ───
+  const addTenant = async (t: Omit<Tenant, 'id' | 'blockedSlots'>) => {
+    await supabase.from("tenants").insert({
+      first_name: t.firstName, last_name: t.lastName, cov: t.cov,
+      email: t.email, phone: t.phone, cedula: t.cedula,
+      rental_mode: t.rentalMode, rental_price: t.rentalPrice,
+    });
+    inv("tenants");
+  };
+  const updateTenant = async (id: string, t: Partial<Tenant>) => {
+    const mapped: any = {};
+    if (t.firstName !== undefined) mapped.first_name = t.firstName;
+    if (t.lastName !== undefined) mapped.last_name = t.lastName;
+    if (t.cov !== undefined) mapped.cov = t.cov;
+    if (t.email !== undefined) mapped.email = t.email;
+    if (t.phone !== undefined) mapped.phone = t.phone;
+    if (t.cedula !== undefined) mapped.cedula = t.cedula;
+    if (t.rentalMode !== undefined) mapped.rental_mode = t.rentalMode;
+    if (t.rentalPrice !== undefined) mapped.rental_price = t.rentalPrice;
+    await supabase.from("tenants").update(mapped).eq("id", id);
+    inv("tenants");
+  };
+  const deleteTenant = async (id: string) => {
+    await supabase.from("tenants").delete().eq("id", id);
+    inv("tenants", "tenant_blocked_slots");
+  };
+  const addTenantBlockedSlot = async (tenantId: string, slot: Omit<TenantBlockedSlot, 'id'>) => {
+    await supabase.from("tenant_blocked_slots").insert({
+      tenant_id: tenantId, date: slot.date, all_day: slot.allDay,
+      start_time: slot.startTime, end_time: slot.endTime,
+    });
+    inv("tenant_blocked_slots");
+  };
+  const removeTenantBlockedSlot = async (_tenantId: string, slotId: string) => {
+    await supabase.from("tenant_blocked_slots").delete().eq("id", slotId);
+    inv("tenant_blocked_slots");
+  };
+
+  const isLoading = loadingDoctors;
+
+  return {
+    // Data
+    doctors, treatments, appointments, patients, inventory, finances, tenants, tasaBCV,
+    // Doctor
+    addDoctor, updateDoctor, deleteDoctor,
+    // Patient
+    addPatient, updatePatient, deletePatient,
+    // Inventory
+    addInventoryItem, updateInventoryItem, deleteInventoryItem,
+    // Appointment
+    addAppointment, updateAppointment, deleteAppointment, completeAppointment,
+    // Treatment
+    updateTreatment,
+    // Finance
+    addFinance, updateFinance,
+    // Settings
+    setTasaBCV,
+    // Tenant
+    addTenant, updateTenant, deleteTenant, addTenantBlockedSlot, removeTenantBlockedSlot,
+    // State
+    isLoading,
+  };
+}

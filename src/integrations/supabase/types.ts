@@ -14,16 +14,354 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      appointments: {
+        Row: {
+          created_at: string
+          date: string
+          doctor_id: string | null
+          id: string
+          materials_used: Json | null
+          notes: string
+          patient_cedula: string | null
+          patient_email: string | null
+          patient_name: string
+          patient_phone: string
+          price_usd: number
+          status: string
+          time: string
+          treatment: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          doctor_id?: string | null
+          id?: string
+          materials_used?: Json | null
+          notes?: string
+          patient_cedula?: string | null
+          patient_email?: string | null
+          patient_name: string
+          patient_phone: string
+          price_usd?: number
+          status?: string
+          time: string
+          treatment: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          doctor_id?: string | null
+          id?: string
+          materials_used?: Json | null
+          notes?: string
+          patient_cedula?: string | null
+          patient_email?: string | null
+          patient_name?: string
+          patient_phone?: string
+          price_usd?: number
+          status?: string
+          time?: string
+          treatment?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctors: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          pay_model: string
+          rate: number
+          specialty: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          pay_model?: string
+          rate?: number
+          specialty?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          pay_model?: string
+          rate?: number
+          specialty?: string
+        }
+        Relationships: []
+      }
+      finances: {
+        Row: {
+          appointment_id: string | null
+          created_at: string
+          date: string
+          doctor_pay_usd: number
+          id: string
+          materials_cost_usd: number
+          tasa_bcv: number
+          treatment_price_usd: number
+          utility_usd: number
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string
+          date: string
+          doctor_pay_usd?: number
+          id?: string
+          materials_cost_usd?: number
+          tasa_bcv?: number
+          treatment_price_usd?: number
+          utility_usd?: number
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string
+          date?: string
+          doctor_pay_usd?: number
+          id?: string
+          materials_cost_usd?: number
+          tasa_bcv?: number
+          treatment_price_usd?: number
+          utility_usd?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finances_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory: {
+        Row: {
+          created_at: string
+          id: string
+          min_stock: number
+          name: string
+          price_usd: number
+          stock: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          min_stock?: number
+          name: string
+          price_usd?: number
+          stock?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          min_stock?: number
+          name?: string
+          price_usd?: number
+          stock?: number
+        }
+        Relationships: []
+      }
+      patients: {
+        Row: {
+          cedula: string
+          clinical_history_url: string
+          created_at: string
+          email: string
+          id: string
+          name: string
+          notes: string
+          phone: string
+          photos: string[]
+        }
+        Insert: {
+          cedula: string
+          clinical_history_url?: string
+          created_at?: string
+          email?: string
+          id?: string
+          name: string
+          notes?: string
+          phone: string
+          photos?: string[]
+        }
+        Update: {
+          cedula?: string
+          clinical_history_url?: string
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          notes?: string
+          phone?: string
+          photos?: string[]
+        }
+        Relationships: []
+      }
+      settings: {
+        Row: {
+          created_at: string
+          id: string
+          tasa_bcv: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          tasa_bcv?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          tasa_bcv?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tenant_blocked_slots: {
+        Row: {
+          all_day: boolean
+          created_at: string
+          date: string
+          end_time: string | null
+          id: string
+          start_time: string | null
+          tenant_id: string
+        }
+        Insert: {
+          all_day?: boolean
+          created_at?: string
+          date: string
+          end_time?: string | null
+          id?: string
+          start_time?: string | null
+          tenant_id: string
+        }
+        Update: {
+          all_day?: boolean
+          created_at?: string
+          date?: string
+          end_time?: string | null
+          id?: string
+          start_time?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_blocked_slots_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenants: {
+        Row: {
+          cedula: string
+          cov: string
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          phone: string
+          rental_mode: string
+          rental_price: number
+        }
+        Insert: {
+          cedula?: string
+          cov?: string
+          created_at?: string
+          email?: string
+          first_name: string
+          id?: string
+          last_name: string
+          phone?: string
+          rental_mode?: string
+          rental_price?: number
+        }
+        Update: {
+          cedula?: string
+          cov?: string
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          phone?: string
+          rental_mode?: string
+          rental_price?: number
+        }
+        Relationships: []
+      }
+      treatments: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          price_usd: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          price_usd?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          price_usd?: number
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +488,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin"],
+    },
   },
 } as const
