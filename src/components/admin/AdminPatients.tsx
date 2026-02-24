@@ -1,10 +1,11 @@
+
 import { useState, useRef } from "react";
-import { useCosoStore, Patient } from "@/store/useCosoStore";
+import { useClinicData, Patient } from "@/hooks/useClinicData";
 import { Users, Plus, Trash2, Edit, Save, X, Camera, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 export const AdminPatients = () => {
-  const { patients, addPatient, updatePatient, deletePatient } = useCosoStore();
+  const { patients, addPatient, updatePatient, deletePatient } = useClinicData();
   const [editing, setEditing] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [viewingPhotos, setViewingPhotos] = useState<string | null>(null);
@@ -12,16 +13,16 @@ export const AdminPatients = () => {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!form.name) { toast.error("Nombre requerido"); return; }
-    addPatient({ id: Math.random().toString(36).substring(2, 10), ...form, photos: [], clinicalHistoryUrl: "" });
+    await addPatient({ ...form, photos: [], clinicalHistoryUrl: "" });
     setAdding(false);
     setForm({ name: "", cedula: "", phone: "", email: "", notes: "" });
     toast.success("Paciente agregado");
   };
 
-  const handleUpdate = (id: string) => {
-    updatePatient(id, form);
+  const handleUpdate = async (id: string) => {
+    await updatePatient(id, form);
     setEditing(null);
     toast.success("Paciente actualizado");
   };
@@ -36,12 +37,12 @@ export const AdminPatients = () => {
     const newPhotos: string[] = [];
     Array.from(files).forEach((file) => {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         newPhotos.push(e.target?.result as string);
         if (newPhotos.length === files.length) {
           const patient = patients.find((p) => p.id === patientId);
           if (patient) {
-            updatePatient(patientId, { photos: [...(patient.photos || []), ...newPhotos] });
+            await updatePatient(patientId, { photos: [...(patient.photos || []), ...newPhotos] });
             toast.success(`${newPhotos.length} foto(s) agregada(s)`);
           }
         }
@@ -52,21 +53,20 @@ export const AdminPatients = () => {
 
   const handleAddPdf = (patientId: string, files: FileList | null) => {
     if (!files || !files[0]) return;
-    const file = files[0];
     const reader = new FileReader();
-    reader.onload = (e) => {
-      updatePatient(patientId, { clinicalHistoryUrl: e.target?.result as string });
+    reader.onload = async (e) => {
+      await updatePatient(patientId, { clinicalHistoryUrl: e.target?.result as string });
       toast.success("Historia clínica cargada");
     };
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(files[0]);
   };
 
-  const removePhoto = (patientId: string, index: number) => {
+  const removePhoto = async (patientId: string, index: number) => {
     const patient = patients.find((p) => p.id === patientId);
     if (patient) {
       const updated = [...(patient.photos || [])];
       updated.splice(index, 1);
-      updatePatient(patientId, { photos: updated });
+      await updatePatient(patientId, { photos: updated });
       toast.info("Foto eliminada");
     }
   };
@@ -112,52 +112,29 @@ export const AdminPatients = () => {
                   {p.notes && <p className="text-xs text-muted-foreground">📝 {p.notes}</p>}
                 </div>
                 <div className="flex gap-1">
-                  <button
-                    onClick={() => setViewingPhotos(viewingPhotos === p.id ? null : p.id)}
-                    className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20"
-                    title="Fotos del proceso"
-                  >
-                    <Camera className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => pdfInputRef.current?.click()}
-                    className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20"
-                    title="Historia clínica PDF"
-                  >
-                    <FileText className="w-4 h-4" />
-                  </button>
+                  <button onClick={() => setViewingPhotos(viewingPhotos === p.id ? null : p.id)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Fotos del proceso"><Camera className="w-4 h-4" /></button>
+                  <button onClick={() => pdfInputRef.current?.click()} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Historia clínica PDF"><FileText className="w-4 h-4" /></button>
                   <input ref={pdfInputRef} type="file" accept=".pdf" className="hidden" onChange={(e) => handleAddPdf(p.id, e.target.files)} />
                   <button onClick={() => startEdit(p)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20"><Edit className="w-4 h-4" /></button>
-                  <button onClick={() => { deletePatient(p.id); toast.info("Paciente eliminado"); }} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20"><Trash2 className="w-4 h-4" /></button>
+                  <button onClick={async () => { await deletePatient(p.id); toast.info("Paciente eliminado"); }} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20"><Trash2 className="w-4 h-4" /></button>
                 </div>
               </div>
 
-              {/* Clinical history link */}
               {p.clinicalHistoryUrl && (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm">
                     <FileText className="w-4 h-4 text-gold" />
                     <a href={p.clinicalHistoryUrl} target="_blank" rel="noopener noreferrer" className="text-gold underline">Ver Historia Clínica (PDF)</a>
                   </div>
-                  <iframe
-                    src={p.clinicalHistoryUrl}
-                    className="w-full h-[400px] rounded-lg border border-border"
-                    title={`Historia clínica de ${p.name}`}
-                  />
+                  <iframe src={p.clinicalHistoryUrl} className="w-full h-[400px] rounded-lg border border-border" title={`Historia clínica de ${p.name}`} />
                 </div>
               )}
 
-              {/* Photos section */}
               {viewingPhotos === p.id && (
                 <div className="bg-muted rounded-lg p-3 space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className="text-sm font-semibold">Fotos del Proceso ({(p.photos || []).length})</h4>
-                    <button
-                      onClick={() => photoInputRef.current?.click()}
-                      className="bg-gold text-gold-foreground px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1"
-                    >
-                      <Plus className="w-3 h-3" /> Agregar
-                    </button>
+                    <button onClick={() => photoInputRef.current?.click()} className="bg-gold text-gold-foreground px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1"><Plus className="w-3 h-3" /> Agregar</button>
                     <input ref={photoInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleAddPhoto(p.id, e.target.files)} />
                   </div>
                   {(p.photos || []).length === 0 ? (
@@ -167,12 +144,7 @@ export const AdminPatients = () => {
                       {(p.photos || []).map((photo, i) => (
                         <div key={i} className="relative group rounded-lg overflow-hidden aspect-square">
                           <img src={photo} alt={`Proceso ${i + 1}`} className="w-full h-full object-cover" />
-                          <button
-                            onClick={() => removePhoto(p.id, i)}
-                            className="absolute top-1 right-1 bg-destructive text-destructive-foreground p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
+                          <button onClick={() => removePhoto(p.id, i)} className="absolute top-1 right-1 bg-destructive text-destructive-foreground p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
                         </div>
                       ))}
                     </div>

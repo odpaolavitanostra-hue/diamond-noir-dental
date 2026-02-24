@@ -1,36 +1,37 @@
+
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Shield, Stethoscope } from "lucide-react";
-import { useCosoStore } from "@/store/useCosoStore";
+import { ArrowLeft, Shield, LogIn, UserPlus } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { adminPassword, doctors } = useCosoStore();
-  const [mode, setMode] = useState<"admin" | "doctor">("admin");
+  const { signIn, signUp } = useAuth();
+  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) { toast.error("Completa todos los campos"); return; }
+    if (password.length < 6) { toast.error("La contraseña debe tener al menos 6 caracteres"); return; }
 
-    if (mode === "admin") {
-      if (password === adminPassword) {
-        sessionStorage.setItem("coso-auth", "admin");
+    setLoading(true);
+    try {
+      if (isSignUp) {
+        await signUp(email, password);
+        toast.success("Cuenta creada exitosamente");
+      } else {
+        await signIn(email, password);
         toast.success("Bienvenido, Administrador");
-        navigate("/admin");
-      } else {
-        toast.error("Contraseña incorrecta");
       }
-    } else {
-      const doctor = doctors.find((d) => d.email === email && d.pass === password);
-      if (doctor) {
-        sessionStorage.setItem("coso-auth", `doctor:${doctor.id}`);
-        toast.success(`Bienvenida, ${doctor.name}`);
-        navigate("/doctor");
-      } else {
-        toast.error("Credenciales incorrectas");
-      }
+      navigate("/admin");
+    } catch (err: any) {
+      toast.error(err.message || "Error de autenticación");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -41,49 +42,26 @@ const Login = () => {
           <ArrowLeft className="w-4 h-4" /> Volver
         </Link>
 
-        <h1 className="font-display text-3xl text-gold font-bold mb-2">Acceso</h1>
-        <p className="text-noir-foreground/50 mb-8">Ingresa al panel de gestión</p>
-
-        {/* Mode Toggle */}
-        <div className="flex gap-2 mb-6">
-          <button
-            type="button"
-            onClick={() => setMode("admin")}
-            className={`flex-1 py-3 rounded-lg text-sm font-semibold transition-all ${
-              mode === "admin"
-                ? "bg-gold text-gold-foreground"
-                : "bg-noir-light text-noir-foreground/50 hover:text-noir-foreground"
-            }`}
-          >
-            <Shield className="w-4 h-4 inline mr-1" /> Admin
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("doctor")}
-            className={`flex-1 py-3 rounded-lg text-sm font-semibold transition-all ${
-              mode === "doctor"
-                ? "bg-gold text-gold-foreground"
-                : "bg-noir-light text-noir-foreground/50 hover:text-noir-foreground"
-            }`}
-          >
-            <Stethoscope className="w-4 h-4 inline mr-1" /> Doctor
-          </button>
-        </div>
+        <h1 className="font-display text-3xl text-gold font-bold mb-2">
+          {isSignUp ? "Crear Cuenta" : "Acceso Admin"}
+        </h1>
+        <p className="text-noir-foreground/50 mb-8">
+          {isSignUp ? "Registra tu cuenta de administrador" : "Ingresa al panel de gestión"}
+        </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {mode === "doctor" && (
-            <div>
-              <label className="block text-noir-foreground/70 text-sm mb-1">Email</label>
-              <input
-                type="email"
-                className="w-full bg-noir-light text-noir-foreground rounded-lg px-4 py-3 text-sm border border-noir-light focus:border-gold focus:outline-none"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                maxLength={100}
-              />
-            </div>
-          )}
+          <div>
+            <label className="block text-noir-foreground/70 text-sm mb-1">Email</label>
+            <input
+              type="email"
+              className="w-full bg-noir-light text-noir-foreground rounded-lg px-4 py-3 text-sm border border-noir-light focus:border-gold focus:outline-none"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              maxLength={100}
+              placeholder="admin@clinica.com"
+            />
+          </div>
           <div>
             <label className="block text-noir-foreground/70 text-sm mb-1">Contraseña</label>
             <input
@@ -92,16 +70,30 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              minLength={6}
               maxLength={50}
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-gold text-gold-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
+            disabled={loading}
+            className="w-full bg-gold text-gold-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            Ingresar
+            {loading ? "Cargando..." : (
+              <>
+                {isSignUp ? <UserPlus className="w-4 h-4" /> : <LogIn className="w-4 h-4" />}
+                {isSignUp ? "Crear Cuenta" : "Ingresar"}
+              </>
+            )}
           </button>
         </form>
+
+        <button
+          onClick={() => setIsSignUp(!isSignUp)}
+          className="w-full mt-4 text-center text-sm text-noir-foreground/50 hover:text-gold transition-colors"
+        >
+          {isSignUp ? "¿Ya tienes cuenta? Inicia sesión" : "¿Primera vez? Crear cuenta de admin"}
+        </button>
       </div>
     </div>
   );
