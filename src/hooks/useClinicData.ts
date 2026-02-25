@@ -48,7 +48,7 @@ export interface Appointment {
   time: string;
   treatment: string;
   priceUSD: number;
-  status: 'pendiente' | 'completada' | 'cancelada';
+  status: 'pendiente' | 'completada' | 'cancelada' | 'pendiente_confirmacion';
   materialsUsed?: { itemId: string; qty: number }[];
   notes: string;
 }
