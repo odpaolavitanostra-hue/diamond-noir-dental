@@ -179,12 +179,12 @@ const Booking = () => {
                 ))}
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="flex-1 min-w-0">
                 <label className="block text-sm font-medium mb-1">Fecha *</label>
-                <input type="date" min={caracasToday} className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none" value={form.date} onChange={(e) => { update("date", e.target.value); update("time", ""); }} required />
+                <input type="date" min={caracasToday} className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none appearance-none" value={form.date} onChange={(e) => { update("date", e.target.value); update("time", ""); }} required />
               </div>
-              <div>
+              <div className="flex-1 min-w-0">
                 <label className="block text-sm font-medium mb-1 flex items-center gap-1"><Clock className="w-4 h-4" /> Hora *</label>
                 <select className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none" value={form.time} onChange={(e) => update("time", e.target.value)} required>
                   <option value="">Seleccionar</option>
