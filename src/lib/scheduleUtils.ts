@@ -95,12 +95,58 @@ export const validateSchedule = (date: string, time: string): { valid: boolean; 
 };
 
 /**
+ * Check if date is within the next 48 hours from now (Caracas time).
+ */
+export const isWithin48Hours = (date: string): boolean => {
+  const now = getCaracasDate();
+  const target = new Date(date + 'T23:59:59');
+  const diffMs = target.getTime() - now.getTime();
+  return diffMs >= 0 && diffMs <= 48 * 60 * 60 * 1000;
+};
+
+/**
+ * Get ALL available time slots for a date (used for 48h bypass and waitlist).
+ */
+export const getAllAvailableSlots = (
+  date: string,
+  allAppointments: AppointmentSlotData[],
+  tenants: TenantWithSlots[],
+  currentHour?: number,
+  isToday?: boolean
+): string[] => {
+  const d = new Date(date + 'T00:00:00');
+  const day = d.getDay();
+  if (day === 0) return [];
+
+  const endHour = day === 6 ? 14 : 17;
+  const allHours: number[] = [];
+  for (let h = 8; h < endHour; h++) allHours.push(h);
+
+  const bookedHours = new Set<number>();
+  const dayAppointments = allAppointments.filter(
+    a => a.date === date && a.status !== 'cancelada'
+  );
+  for (const a of dayAppointments) {
+    bookedHours.add(parseInt(a.time.split(':')[0]));
+  }
+
+  return allHours.filter(h => {
+    if (isToday && currentHour !== undefined && h <= currentHour) return false;
+    const time = `${h.toString().padStart(2, '0')}:00`;
+    if (isSlotBlockedByTenant(date, time, tenants).blocked) return false;
+    if (bookedHours.has(h)) return false;
+    return true;
+  }).map(h => `${h.toString().padStart(2, '0')}:00`);
+};
+
+/**
  * Smart scheduling algorithm that maximizes agenda density.
  * Rules:
  * 1. Empty day → only anchor slots (08:00, 14:00)
  * 2. Proximity: enable T-1 and T+1 from existing bookings
- * 3. Max 3 options shown, prioritizing gap-closing slots
+ * 3. Max 4 options shown, prioritizing gap-closing slots
  * 4. 70% block rule: don't open opposite block if current < 70% contiguous
+ * 5. 48-hour bypass: if date is within 48h, show ALL available slots (max 4)
  */
 export const getSmartTimeSlots = (
   date: string,
@@ -109,6 +155,12 @@ export const getSmartTimeSlots = (
   currentHour?: number,
   isToday?: boolean
 ): string[] => {
+  // 48-hour bypass: show all available slots to avoid losing last-minute patients
+  if (isWithin48Hours(date)) {
+    const all = getAllAvailableSlots(date, allAppointments, tenants, currentHour, isToday);
+    return all.slice(0, 4);
+  }
+
   const d = new Date(date + 'T00:00:00');
   const day = d.getDay();
   if (day === 0) return [];
@@ -149,7 +201,7 @@ export const getSmartTimeSlots = (
       anchors.push(`${MORNING_ANCHOR.toString().padStart(2, '0')}:00`);
     if (availableHours.includes(AFTERNOON_ANCHOR))
       anchors.push(`${AFTERNOON_ANCHOR.toString().padStart(2, '0')}:00`);
-    return anchors.slice(0, 3);
+    return anchors.slice(0, 4);
   }
 
   // Build proximity set: for each booked hour, allow T-1 and T+1
@@ -191,8 +243,8 @@ export const getSmartTimeSlots = (
     return a - b; // earlier first as tiebreaker
   });
 
-  // Return max 3
-  return smartSlots.slice(0, 3).sort((a, b) => a - b).map(
+  // Return max 4
+  return smartSlots.slice(0, 4).sort((a, b) => a - b).map(
     h => `${h.toString().padStart(2, '0')}:00`
   );
 };
