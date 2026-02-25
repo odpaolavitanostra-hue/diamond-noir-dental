@@ -165,8 +165,15 @@ export const AdminCalendar = () => {
           <span className={`text-xs px-3 py-1 rounded-full font-semibold whitespace-nowrap ${
             app.status === "pendiente" ? "bg-gold/20 text-gold"
               : app.status === "completada" ? "bg-clinic-green/20 text-clinic-green"
+              : app.status === "pendiente_confirmacion" ? "bg-orange-500/20 text-orange-400"
               : "bg-destructive/20 text-destructive"
-          }`}>{app.status.charAt(0).toUpperCase() + app.status.slice(1)}</span>
+          }`}>{app.status === "pendiente_confirmacion" ? "Por confirmar" : app.status.charAt(0).toUpperCase() + app.status.slice(1)}</span>
+          {app.status === "pendiente_confirmacion" && (
+            <div className="flex gap-1">
+              <button onClick={async () => { await updateAppointment(app.id, { status: "pendiente" }); toast.success("✅ Cita aprobada"); }} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Aprobar cita"><Check className="w-4 h-4" /></button>
+              <button onClick={async () => { await updateAppointment(app.id, { status: "cancelada" }); toast.info("Cita rechazada"); }} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Rechazar cita"><X className="w-4 h-4" /></button>
+            </div>
+          )}
           {app.status === "pendiente" && (
             <div className="flex gap-1">
               <button onClick={() => { setEditingDoctor(app.id); setSelectedDoctorId(app.doctorId); }} className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Cambiar doctor"><UserCog className="w-4 h-4" /></button>
@@ -306,11 +313,15 @@ export const AdminCalendar = () => {
       </div>
 
       <div className="flex gap-2 mb-4 flex-wrap">
-        {["all", "pendiente", "completada", "cancelada"].map((f) => (
-          <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filter === f ? "bg-gold text-gold-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
-            {f === "all" ? "Todas" : f.charAt(0).toUpperCase() + f.slice(1)}
-          </button>
-        ))}
+        {["all", "pendiente", "pendiente_confirmacion", "completada", "cancelada"].map((f) => {
+          const label = f === "all" ? "Todas" : f === "pendiente_confirmacion" ? "⏳ Por confirmar" : f.charAt(0).toUpperCase() + f.slice(1);
+          const count = f === "pendiente_confirmacion" ? appointments.filter(a => a.status === "pendiente_confirmacion").length : 0;
+          return (
+            <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${filter === f ? "bg-gold text-gold-foreground" : f === "pendiente_confirmacion" && count > 0 ? "bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 animate-pulse" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
+              {label}{f === "pendiente_confirmacion" && count > 0 && <span className="bg-orange-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{count}</span>}
+            </button>
+          );
+        })}
       </div>
 
       {view === "month" && (
@@ -361,7 +372,7 @@ export const AdminCalendar = () => {
                     return (
                       <div key={`${dateStr}-${h}`} onClick={() => { if (!app && !blocked) { setShowBooking(true); setBookingForm((p) => ({ ...p, date: dateStr, time })); } }} className={`min-h-[50px] border border-border/30 p-1 text-[10px] rounded cursor-pointer hover:bg-muted/50 ${blocked ? "bg-destructive/10" : ""}`}>
                         {app && (
-                          <div className={`rounded px-1 py-0.5 truncate ${app.status === "pendiente" ? "bg-gold/20 text-gold" : app.status === "completada" ? "bg-clinic-green/20 text-clinic-green" : "bg-destructive/20 text-destructive"}`}>
+                          <div className={`rounded px-1 py-0.5 truncate ${app.status === "pendiente" ? "bg-gold/20 text-gold" : app.status === "completada" ? "bg-clinic-green/20 text-clinic-green" : app.status === "pendiente_confirmacion" ? "bg-orange-500/20 text-orange-400" : "bg-destructive/20 text-destructive"}`}>
                             {app.patientName.split(" ")[0]}
                           </div>
                         )}
