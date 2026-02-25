@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, CalendarDays, Clock, User, Phone, Stethoscope, Mail, CreditCard } from "lucide-react";
 import { useClinicData } from "@/hooks/useClinicData";
+import { supabase } from "@/integrations/supabase/client";
 import { validateSlot, validateSchedule, isSlotBlockedByTenant, getCaracasNow, getCaracasToday } from "@/lib/scheduleUtils";
 import { toast } from "sonner";
 
@@ -44,13 +45,50 @@ const Booking = () => {
       return;
     }
 
-    const tenantCheck = isSlotBlockedByTenant(form.date, form.time, tenants);
+    const [{ data: latestAppointments, error: appointmentsError }, { data: latestBlockedSlots, error: blockedSlotsError }] = await Promise.all([
+      supabase.from("appointments").select("id, date, time, status"),
+      supabase.from("tenant_blocked_slots").select("tenant_id, date, all_day, start_time, end_time"),
+    ]);
+
+    if (appointmentsError || blockedSlotsError) {
+      toast.error("No se pudo validar la disponibilidad en tiempo real. Intenta nuevamente.");
+      return;
+    }
+
+    const slotsByTenant = new Map<string, {
+      firstName: string;
+      lastName: string;
+      blockedSlots: { date: string; allDay: boolean; startTime?: string; endTime?: string }[];
+    }>();
+
+    for (const slot of latestBlockedSlots || []) {
+      const existing = slotsByTenant.get(slot.tenant_id);
+      const blockedSlot = {
+        date: slot.date,
+        allDay: slot.all_day,
+        startTime: slot.start_time || undefined,
+        endTime: slot.end_time || undefined,
+      };
+
+      if (existing) {
+        existing.blockedSlots.push(blockedSlot);
+      } else {
+        slotsByTenant.set(slot.tenant_id, {
+          firstName: "Bloqueo",
+          lastName: "Agenda",
+          blockedSlots: [blockedSlot],
+        });
+      }
+    }
+
+    const tenantsForValidation = Array.from(slotsByTenant.values());
+    const tenantCheck = isSlotBlockedByTenant(form.date, form.time, tenantsForValidation);
     if (tenantCheck.blocked) {
       toast.error("Este horario está reservado. Selecciona otro.");
       return;
     }
 
-    if (!validateSlot(form.date, form.time, appointments, tenants)) {
+    if (!validateSlot(form.date, form.time, latestAppointments || [], tenantsForValidation)) {
       toast.error("Ya existe una cita en ese horario. Debe haber al menos 60 min de diferencia.");
       return;
     }

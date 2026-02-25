@@ -122,6 +122,8 @@ export function useClinicData() {
         materialsUsed: a.materials_used as any, notes: a.notes,
       })) as Appointment[];
     },
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
   });
 
   const { data: patients = [] } = useQuery({
@@ -182,19 +184,47 @@ export function useClinicData() {
       const { data } = await supabase.from("tenant_blocked_slots").select("*");
       return data || [];
     },
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
   });
 
-  const tenants: Tenant[] = rawTenants.map(t => ({
-    id: t.id, firstName: t.first_name, lastName: t.last_name,
-    cov: t.cov, email: t.email, phone: t.phone, cedula: t.cedula,
-    rentalMode: t.rental_mode as 'turno' | 'percent', rentalPrice: t.rental_price,
-    blockedSlots: blockedSlots
-      .filter(s => s.tenant_id === t.id)
-      .map(s => ({
-        id: s.id, date: s.date, allDay: s.all_day,
-        startTime: s.start_time || undefined, endTime: s.end_time || undefined,
-      })),
-  }));
+  const blockedSlotsByTenantId = blockedSlots.reduce<Record<string, TenantBlockedSlot[]>>((acc, slot) => {
+    const tenantId = slot.tenant_id;
+    if (!acc[tenantId]) acc[tenantId] = [];
+
+    acc[tenantId].push({
+      id: slot.id,
+      date: slot.date,
+      allDay: slot.all_day,
+      startTime: slot.start_time || undefined,
+      endTime: slot.end_time || undefined,
+    });
+
+    return acc;
+  }, {});
+
+  const rawTenantsById = new Map(rawTenants.map((tenant) => [tenant.id, tenant]));
+  const tenantIds = Array.from(new Set([
+    ...rawTenants.map((tenant) => tenant.id),
+    ...Object.keys(blockedSlotsByTenantId),
+  ]));
+
+  const tenants: Tenant[] = tenantIds.map((tenantId) => {
+    const tenant = rawTenantsById.get(tenantId);
+
+    return {
+      id: tenantId,
+      firstName: tenant?.first_name ?? "Bloqueo",
+      lastName: tenant?.last_name ?? "Agenda",
+      cov: tenant?.cov ?? "",
+      email: tenant?.email ?? "",
+      phone: tenant?.phone ?? "",
+      cedula: tenant?.cedula ?? "",
+      rentalMode: (tenant?.rental_mode as 'turno' | 'percent') ?? "turno",
+      rentalPrice: tenant?.rental_price ?? 0,
+      blockedSlots: blockedSlotsByTenantId[tenantId] || [],
+    };
+  });
 
   const tasaBCV = settings?.tasa_bcv ?? 36.50;
 
