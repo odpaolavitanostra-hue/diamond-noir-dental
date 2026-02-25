@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { validateSlot, validateSchedule, isSlotBlockedByTenant, getSmartTimeSlots, getCaracasNow, getCaracasToday } from "@/lib/scheduleUtils";
 import { toast } from "sonner";
 import WaitlistDialog from "@/components/booking/WaitlistDialog";
+import BookingConfirmationModal from "@/components/booking/BookingConfirmationModal";
 
 const Booking = () => {
   const { doctors, treatments, appointments, patients, addAppointment, addPatient, tenants } = useClinicData();
@@ -26,6 +27,7 @@ const Booking = () => {
     notes: "",
   });
   const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [confirmationData, setConfirmationData] = useState<{ name: string; date: string; time: string } | null>(null);
 
   // Update doctorId when doctors load
   const effectiveDoctorId = form.doctorId || doctors[0]?.id || "";
@@ -126,8 +128,11 @@ const Booking = () => {
       notes: form.notes,
     });
 
-    toast.success("¡Cita agendada exitosamente!");
-    navigate("/");
+    setConfirmationData({
+      name: form.patientName.trim(),
+      date: form.date,
+      time: form.time,
+    });
   };
 
   const update = (key: string, val: string) => setForm((p) => ({ ...p, [key]: val }));
@@ -287,6 +292,29 @@ const Booking = () => {
           isToday={form.date === caracasToday}
           onSuccess={() => navigate("/")}
         />
+        {confirmationData && (
+          <BookingConfirmationModal
+            open={!!confirmationData}
+            onClose={() => {
+              setConfirmationData(null);
+              setForm({
+                patientName: "",
+                patientCedula: "",
+                patientPhone: "",
+                patientEmail: "",
+                doctorId: "",
+                date: "",
+                time: "",
+                treatment: initialTreatment,
+                notes: "",
+              });
+              navigate("/");
+            }}
+            patientName={confirmationData.name}
+            date={confirmationData.date}
+            time={confirmationData.time}
+          />
+        )}
       </div>
     </div>
   );
