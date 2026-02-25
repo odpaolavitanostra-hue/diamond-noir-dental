@@ -1,11 +1,12 @@
 
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, CalendarDays, Clock, User, Phone, Stethoscope, Mail, CreditCard } from "lucide-react";
+import { ArrowLeft, CalendarDays, Clock, User, Phone, Stethoscope, Mail, CreditCard, HelpCircle } from "lucide-react";
 import { useClinicData } from "@/hooks/useClinicData";
 import { supabase } from "@/integrations/supabase/client";
 import { validateSlot, validateSchedule, isSlotBlockedByTenant, getSmartTimeSlots, getCaracasNow, getCaracasToday } from "@/lib/scheduleUtils";
 import { toast } from "sonner";
+import WaitlistDialog from "@/components/booking/WaitlistDialog";
 
 const Booking = () => {
   const { doctors, treatments, appointments, patients, addAppointment, addPatient, tenants } = useClinicData();
@@ -24,6 +25,7 @@ const Booking = () => {
     treatment: initialTreatment,
     notes: "",
   });
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
 
   // Update doctorId when doctors load
   const effectiveDoctorId = form.doctorId || doctors[0]?.id || "";
@@ -224,6 +226,16 @@ const Booking = () => {
             {form.date && getTimeSlots().length === 0 && (
               <p className="text-xs text-destructive">No hay horarios disponibles para esta fecha.</p>
             )}
+            {form.date && (
+              <button
+                type="button"
+                onClick={() => setWaitlistOpen(true)}
+                className="w-full flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-gold transition-colors py-2 border border-dashed border-border rounded-lg hover:border-gold/50"
+              >
+                <HelpCircle className="w-4 h-4" />
+                No encuentro mi horario
+              </button>
+            )}
             <div>
               <label className="block text-sm font-medium mb-1">Notas (opcional)</label>
               <textarea className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none resize-none" rows={3} value={form.notes} onChange={(e) => update("notes", e.target.value)} maxLength={500} />
@@ -248,6 +260,27 @@ const Booking = () => {
             />
           </a>
         </div>
+
+        <WaitlistDialog
+          open={waitlistOpen}
+          onOpenChange={setWaitlistOpen}
+          form={{
+            patientName: form.patientName,
+            patientCedula: form.patientCedula,
+            patientPhone: form.patientPhone,
+            patientEmail: form.patientEmail,
+            doctorId: effectiveDoctorId,
+            date: form.date,
+            treatment: effectiveTreatment,
+            notes: form.notes,
+          }}
+          appointments={appointments}
+          tenants={tenants}
+          priceUSD={selectedTreatment?.priceUSD || 0}
+          currentHour={getCaracasNow().getHours()}
+          isToday={form.date === caracasToday}
+          onSuccess={() => navigate("/")}
+        />
       </div>
     </div>
   );
