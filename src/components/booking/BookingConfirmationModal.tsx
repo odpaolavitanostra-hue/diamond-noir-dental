@@ -1,5 +1,5 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { CalendarDays, Clock, CheckCircle2, MessageCircle } from "lucide-react";
+import { CalendarDays, Clock, CheckCircle2, MessageCircle, Hourglass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 
@@ -9,9 +9,11 @@ interface BookingConfirmationModalProps {
   patientName: string;
   date: string;
   time: string;
+  /** If true, shows "pending confirmation" variant instead of confirmed */
+  isPendingConfirmation?: boolean;
 }
 
-const BookingConfirmationModal = ({ open, onClose, patientName, date, time }: BookingConfirmationModalProps) => {
+const BookingConfirmationModal = ({ open, onClose, patientName, date, time, isPendingConfirmation = false }: BookingConfirmationModalProps) => {
   const [showCheck, setShowCheck] = useState(false);
 
   useEffect(() => {
@@ -44,28 +46,36 @@ const BookingConfirmationModal = ({ open, onClose, patientName, date, time }: Bo
         <div className="h-2 w-full bg-gradient-to-r from-gold via-gold-muted to-gold" />
 
         <div className="flex flex-col items-center text-center px-8 pt-8 pb-10 gap-5">
-          {/* Animated check */}
+          {/* Animated icon */}
           <div
-            className={`w-20 h-20 rounded-full bg-clinic-green/15 flex items-center justify-center transition-all duration-500 ${
+            className={`w-20 h-20 rounded-full ${isPendingConfirmation ? "bg-gold/15" : "bg-clinic-green/15"} flex items-center justify-center transition-all duration-500 ${
               showCheck ? "scale-100 opacity-100" : "scale-50 opacity-0"
             }`}
           >
-            <CheckCircle2
-              className={`w-12 h-12 text-clinic-green transition-all duration-700 ${
-                showCheck ? "scale-100" : "scale-0"
-              }`}
-              strokeWidth={2.2}
-            />
+            {isPendingConfirmation ? (
+              <Hourglass
+                className={`w-12 h-12 text-gold transition-all duration-700 ${showCheck ? "scale-100" : "scale-0"}`}
+                strokeWidth={2.2}
+              />
+            ) : (
+              <CheckCircle2
+                className={`w-12 h-12 text-clinic-green transition-all duration-700 ${showCheck ? "scale-100" : "scale-0"}`}
+                strokeWidth={2.2}
+              />
+            )}
           </div>
 
           {/* Title */}
           <h2 className="font-display text-2xl sm:text-3xl font-bold text-foreground leading-tight">
-            ¡Cita agendada exitosamente!
+            {isPendingConfirmation ? "¡Solicitud enviada!" : "¡Cita agendada exitosamente!"}
           </h2>
 
           {/* Patient greeting */}
           <p className="text-muted-foreground text-base">
-            Hola <span className="font-semibold text-foreground">{patientName}</span>, tu cita ha sido reservada para:
+            Hola <span className="font-semibold text-foreground">{patientName}</span>,{" "}
+            {isPendingConfirmation
+              ? "tu solicitud de horario especial ha sido registrada para:"
+              : "tu cita ha sido reservada para:"}
           </p>
 
           {/* Date & Time cards */}
@@ -86,13 +96,22 @@ const BookingConfirmationModal = ({ open, onClose, patientName, date, time }: Bo
             </div>
           </div>
 
-          {/* WhatsApp notice */}
-          <div className="w-full flex items-center gap-3 bg-clinic-green/10 rounded-2xl px-5 py-4">
-            <MessageCircle className="w-6 h-6 text-clinic-green shrink-0" />
-            <p className="text-sm text-foreground text-left">
-              Pronto recibirás la <strong>confirmación por WhatsApp</strong>.
-            </p>
-          </div>
+          {/* Notice */}
+          {isPendingConfirmation ? (
+            <div className="w-full flex items-center gap-3 bg-gold/10 rounded-2xl px-5 py-4">
+              <Hourglass className="w-6 h-6 text-gold shrink-0" />
+              <p className="text-sm text-foreground text-left">
+                Tu cita está <strong>sujeta a confirmación</strong> por parte del equipo médico. Te contactaremos pronto.
+              </p>
+            </div>
+          ) : (
+            <div className="w-full flex items-center gap-3 bg-clinic-green/10 rounded-2xl px-5 py-4">
+              <MessageCircle className="w-6 h-6 text-clinic-green shrink-0" />
+              <p className="text-sm text-foreground text-left">
+                Pronto recibirás la <strong>confirmación por WhatsApp</strong>.
+              </p>
+            </div>
+          )}
 
           {/* Hint */}
           <p className="text-xs text-muted-foreground">

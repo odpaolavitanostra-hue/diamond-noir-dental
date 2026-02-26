@@ -98,15 +98,16 @@ const Booking = () => {
     }
 
     const priceUSD = selectedTreatment?.priceUSD || 0;
+    const formattedPhone = `+58${form.patientPhone.trim()}`;
 
     const existingPatient = patients.find(
-      (p) => p.cedula === form.patientCedula.trim() || p.phone === form.patientPhone.trim() || p.name.toLowerCase() === form.patientName.trim().toLowerCase()
+      (p) => p.cedula === form.patientCedula.trim() || p.phone === formattedPhone || p.name.toLowerCase() === form.patientName.trim().toLowerCase()
     );
     if (!existingPatient) {
       await addPatient({
         name: form.patientName.trim(),
         cedula: form.patientCedula.trim(),
-        phone: form.patientPhone.trim(),
+        phone: formattedPhone,
         email: form.patientEmail.trim(),
         notes: "Registrado vía booking online",
         photos: [],
@@ -116,7 +117,7 @@ const Booking = () => {
 
     await addAppointment({
       patientName: form.patientName.trim(),
-      patientPhone: form.patientPhone.trim(),
+      patientPhone: formattedPhone,
       patientCedula: form.patientCedula.trim(),
       patientEmail: form.patientEmail.trim(),
       doctorId: effectiveDoctorId,
@@ -184,7 +185,10 @@ const Booking = () => {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1 flex items-center gap-1"><Phone className="w-4 h-4" /> Teléfono *</label>
-              <input type="tel" inputMode="numeric" className="w-full bg-muted rounded-lg px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors" value={form.patientPhone} onChange={(e) => { const val = e.target.value.replace(/[^0-9]/g, ""); update("patientPhone", val); }} required maxLength={20} />
+              <div className="flex">
+                <span className="inline-flex items-center px-3 bg-muted border border-r-0 border-border rounded-l-lg text-sm text-muted-foreground font-medium">+58</span>
+                <input type="tel" inputMode="numeric" className="w-full bg-muted rounded-r-lg rounded-l-none px-4 py-3 text-sm border border-border focus:border-gold focus:outline-none transition-colors" value={form.patientPhone} onChange={(e) => { let val = e.target.value.replace(/[^0-9]/g, ""); if (val.startsWith("0")) val = val.slice(1); update("patientPhone", val); }} required maxLength={10} placeholder="4121234567" />
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1 flex items-center gap-1"><Mail className="w-4 h-4" /> Email *</label>
