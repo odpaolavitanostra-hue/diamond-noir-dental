@@ -1,13 +1,27 @@
 
 import { useClinicData } from "@/hooks/useClinicData";
 import { CalendarDays, Users, Package, DollarSign, TrendingUp, AlertTriangle, Clock, CheckCircle, Building2 } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
 interface AdminDashboardProps {
   onNavigate?: (tab: string) => void;
 }
 
+const COLORS = [
+  "hsl(var(--gold))",
+  "hsl(var(--clinic-green))",
+  "#3b82f6",
+  "#f59e0b",
+  "#8b5cf6",
+  "#ec4899",
+  "#14b8a6",
+  "#f97316",
+  "#6366f1",
+  "#84cc16",
+];
+
 export const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
-  const { appointments, patients, doctors, inventory, finances, tasaBCV, rentalRequests } = useClinicData();
+  const { appointments, patients, doctors, inventory, finances, tasaBCV, rentalRequests, tenants } = useClinicData();
 
   const today = new Date().toISOString().split("T")[0];
   const todayApps = appointments.filter((a) => a.date === today);
@@ -15,19 +29,27 @@ export const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
   const completedApps = appointments.filter((a) => a.status === "completada");
   const lowStockItems = inventory.filter((i) => i.stock <= i.minStock);
 
-  const totalRevenueUSD = finances.reduce((s, f) => s + f.treatmentPriceUSD, 0);
-  const totalUtilityUSD = finances.reduce((s, f) => s + f.utilityUSD, 0);
-
   const currentMonth = new Date().toISOString().slice(0, 7);
   const monthFinances = finances.filter((f) => f.date.startsWith(currentMonth));
   const monthRevenueUSD = monthFinances.reduce((s, f) => s + f.treatmentPriceUSD, 0);
   const monthUtilityUSD = monthFinances.reduce((s, f) => s + f.utilityUSD, 0);
-
-  // Use per-record tasaBCV for Bs conversions (daily rate)
   const monthRevenueBs = monthFinances.reduce((s, f) => s + f.treatmentPriceUSD * f.tasaBCV, 0);
   const monthUtilityBs = monthFinances.reduce((s, f) => s + f.utilityUSD * f.tasaBCV, 0);
-  const totalRevenueBs = finances.reduce((s, f) => s + f.treatmentPriceUSD * f.tasaBCV, 0);
-  const totalUtilityBs = finances.reduce((s, f) => s + f.utilityUSD * f.tasaBCV, 0);
+
+  // Pie chart: count services performed (completed appointments by treatment + rentals)
+  const treatmentCounts: Record<string, number> = {};
+  completedApps.forEach((a) => {
+    treatmentCounts[a.treatment] = (treatmentCounts[a.treatment] || 0) + 1;
+  });
+  // Count approved rentals
+  const totalRentals = tenants.reduce((sum, t) => sum + t.blockedSlots.filter(s => s.status === "approved").length, 0);
+  if (totalRentals > 0) {
+    treatmentCounts["Alquileres"] = totalRentals;
+  }
+
+  const pieData = Object.entries(treatmentCounts)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
 
   const nav = (tab: string) => onNavigate?.(tab);
 
@@ -60,16 +82,26 @@ export const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
           </div>
         </div>
 
-        <div className="bg-card rounded-xl p-5 gold-border space-y-3 cursor-pointer hover:ring-1 hover:ring-gold/40 transition-all" onClick={() => nav("finances")}>
+        {/* Pie Chart - Services performed */}
+        <div className="bg-card rounded-xl p-5 gold-border space-y-3">
           <h3 className="font-display font-semibold flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-gold" /> Totales Históricos
+            <TrendingUp className="w-5 h-5 text-gold" /> Servicios Realizados
           </h3>
-          <div className="grid grid-cols-2 gap-3">
-            <div><p className="text-xs text-muted-foreground">Ingresos Totales</p><p className="text-xl font-bold text-gold">${totalRevenueUSD.toFixed(2)}</p></div>
-            <div><p className="text-xs text-muted-foreground">Utilidad Total</p><p className="text-xl font-bold text-clinic-green">${totalUtilityUSD.toFixed(2)}</p></div>
-            <div><p className="text-xs text-muted-foreground">Ingresos Bs.</p><p className="text-lg font-semibold">Bs. {totalRevenueBs.toFixed(2)}</p></div>
-            <div><p className="text-xs text-muted-foreground">Utilidad Bs.</p><p className="text-lg font-semibold">Bs. {totalUtilityBs.toFixed(2)}</p></div>
-          </div>
+          {pieData.length === 0 ? (
+            <p className="text-muted-foreground text-sm text-center py-8">No hay servicios registrados aún</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={80} paddingAngle={2} dataKey="value" nameKey="name">
+                  {pieData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }} />
+                <Legend wrapperStyle={{ fontSize: "11px" }} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 

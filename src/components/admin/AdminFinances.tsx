@@ -1,10 +1,9 @@
 
 import { useState } from "react";
 import { useClinicData } from "@/hooks/useClinicData";
-import { DollarSign, Download, Plus, Trash2, BookOpen, ShoppingCart, Receipt, Edit, Save, X } from "lucide-react";
+import { DollarSign, Download, Plus, Trash2, BookOpen, ShoppingCart, Receipt, Edit, Save, X, CalendarDays } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
-
 
 interface AccountingEntry {
   id: string;
@@ -16,12 +15,39 @@ interface AccountingEntry {
 
 const generateId = () => Math.random().toString(36).substring(2, 10);
 
+type PeriodFilter = "dia" | "semana" | "mes" | "todo";
+
+const getDateRange = (filter: PeriodFilter, customDate?: string): { start: string; end: string } => {
+  const today = customDate || new Date().toISOString().split("T")[0];
+  if (filter === "dia") return { start: today, end: today };
+  if (filter === "semana") {
+    const d = new Date(today + "T00:00:00");
+    const day = d.getDay();
+    const diffToMon = day === 0 ? -6 : 1 - day;
+    const monday = new Date(d);
+    monday.setDate(d.getDate() + diffToMon);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    return { start: monday.toISOString().split("T")[0], end: sunday.toISOString().split("T")[0] };
+  }
+  if (filter === "mes") {
+    const [y, m] = today.split("-");
+    const lastDay = new Date(parseInt(y), parseInt(m), 0).getDate();
+    return { start: `${y}-${m}-01`, end: `${y}-${m}-${lastDay.toString().padStart(2, "0")}` };
+  }
+  return { start: "2000-01-01", end: "2099-12-31" };
+};
+
+const inRange = (date: string, start: string, end: string) => date >= start && date <= end;
+
 export const AdminFinances = () => {
-  const { finances, appointments, doctors, tasaBCV, setTasaBCV, updateFinance } = useClinicData();
+  const { finances, appointments, doctors, tenants, tasaBCV, setTasaBCV, updateFinance } = useClinicData();
   const [editingFinance, setEditingFinance] = useState<string | null>(null);
   const [editDoctorPay, setEditDoctorPay] = useState("");
-
   const [activeTab, setActiveTab] = useState<"resumen" | "compras" | "ventas">("resumen");
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("mes");
+  const [customDate, setCustomDate] = useState(new Date().toISOString().split("T")[0]);
+
   const [purchases, setPurchases] = useState<AccountingEntry[]>(() => {
     const saved = localStorage.getItem("coso-purchases");
     return saved ? JSON.parse(saved) : [];
@@ -30,7 +56,6 @@ export const AdminFinances = () => {
     const saved = localStorage.getItem("coso-sales");
     return saved ? JSON.parse(saved) : [];
   });
-
   const [newEntry, setNewEntry] = useState({ date: "", description: "", amountUSD: "", reference: "" });
 
   const savePurchases = (items: AccountingEntry[]) => { setPurchases(items); localStorage.setItem("coso-purchases", JSON.stringify(items)); };
@@ -51,31 +76,67 @@ export const AdminFinances = () => {
     toast.success("Registro eliminado");
   };
 
-  const totalIncomeUSD = finances.reduce((s, f) => s + f.treatmentPriceUSD, 0);
-  const totalDoctorPayUSD = finances.reduce((s, f) => s + f.doctorPayUSD, 0);
-  const totalMaterialsUSD = finances.reduce((s, f) => s + f.materialsCostUSD, 0);
-  const totalUtilityUSD = finances.reduce((s, f) => s + f.utilityUSD, 0);
-  const totalPurchasesUSD = purchases.reduce((s, p) => s + p.amountUSD, 0);
-  const totalSalesUSD = sales.reduce((s, p) => s + p.amountUSD, 0);
+  const { start, end } = getDateRange(periodFilter, customDate);
+  const filteredFinances = finances.filter(f => inRange(f.date, start, end));
+  const filteredPurchases = purchases.filter(p => inRange(p.date, start, end));
+  const filteredSales = sales.filter(s => inRange(s.date, start, end));
+
+  // Rental income from blocked slots
+  const allBlockedSlots = tenants.flatMap(t => t.blockedSlots.map(sl => ({ ...sl, tenantName: `${t.firstName} ${t.lastName}` })));
+  const filteredRentals = allBlockedSlots.filter(sl => sl.status === "approved" && sl.rentalPrice && sl.rentalPrice > 0 && inRange(sl.date, start, end));
+  const totalRentalIncomeUSD = filteredRentals.reduce((s, r) => s + (r.rentalPrice || 0), 0);
+
+  const totalIncomeUSD = filteredFinances.reduce((s, f) => s + f.treatmentPriceUSD, 0);
+  const totalDoctorPayUSD = filteredFinances.reduce((s, f) => s + f.doctorPayUSD, 0);
+  const totalMaterialsUSD = filteredFinances.reduce((s, f) => s + f.materialsCostUSD, 0);
+  const totalUtilityUSD = filteredFinances.reduce((s, f) => s + f.utilityUSD, 0);
+  const totalPurchasesUSD = filteredPurchases.reduce((s, p) => s + p.amountUSD, 0);
+  const totalSalesUSD = filteredSales.reduce((s, p) => s + p.amountUSD, 0);
+
+  const periodLabel = periodFilter === "dia" ? customDate : periodFilter === "semana" ? `${start} al ${end}` : periodFilter === "mes" ? `${start.slice(0, 7)}` : "Histórico";
 
   const exportXLSX = () => {
     const wb = XLSX.utils.book_new();
-    const fiscalData = finances.map((f) => {
+    // Fiscal report (filtered)
+    const fiscalData = filteredFinances.map((f) => {
       const app = appointments.find((a) => a.id === f.appointmentId);
       const doctor = app ? doctors.find((d) => d.id === app.doctorId) : null;
-      return { Fecha: f.date, Paciente: app?.patientName || "N/A", Tratamiento: app?.treatment || "N/A", Doctor: doctor?.name || "N/A", "Ingreso VES": (f.treatmentPriceUSD * f.tasaBCV).toFixed(2), "Pago Doctor VES": (f.doctorPayUSD * f.tasaBCV).toFixed(2), "Materiales VES": (f.materialsCostUSD * f.tasaBCV).toFixed(2), "Utilidad VES": (f.utilityUSD * f.tasaBCV).toFixed(2), "Tasa BCV": f.tasaBCV.toFixed(2) };
+      return { Fecha: f.date, Paciente: app?.patientName || "N/A", Tratamiento: app?.treatment || "N/A", Doctor: doctor?.name || "N/A", "Ingreso USD": f.treatmentPriceUSD.toFixed(2), "Ingreso VES": (f.treatmentPriceUSD * f.tasaBCV).toFixed(2), "Pago Doctor USD": f.doctorPayUSD.toFixed(2), "Pago Doctor VES": (f.doctorPayUSD * f.tasaBCV).toFixed(2), "Materiales USD": f.materialsCostUSD.toFixed(2), "Materiales VES": (f.materialsCostUSD * f.tasaBCV).toFixed(2), "Utilidad USD": f.utilityUSD.toFixed(2), "Utilidad VES": (f.utilityUSD * f.tasaBCV).toFixed(2), "Tasa BCV": f.tasaBCV.toFixed(2) };
     });
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(fiscalData), "Reporte Fiscal");
-    const purchaseData = purchases.map((p) => ({ Fecha: p.date, Descripción: p.description, Referencia: p.reference, "Monto USD": p.amountUSD.toFixed(2), "Monto VES": (p.amountUSD * tasaBCV).toFixed(2) }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(fiscalData), "Pacientes");
+
+    // Rentals
+    const rentalData = filteredRentals.map(r => ({
+      Fecha: r.date, Inquilino: r.tenantName, Horario: r.allDay ? "Día completo" : `${r.startTime} - ${r.endTime}`,
+      Modalidad: r.rentalMode === "turno" ? "Turno" : "Porcentaje", "Ingreso USD": (r.rentalPrice || 0).toFixed(2), "Ingreso VES": ((r.rentalPrice || 0) * tasaBCV).toFixed(2),
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rentalData), "Alquileres");
+
+    // Purchases
+    const purchaseData = filteredPurchases.map((p) => ({ Fecha: p.date, Descripción: p.description, Referencia: p.reference, "Monto USD": p.amountUSD.toFixed(2), "Monto VES": (p.amountUSD * tasaBCV).toFixed(2) }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(purchaseData), "Libro de Compras");
-    const salesData = sales.map((s) => ({ Fecha: s.date, Descripción: s.description, Referencia: s.reference, "Monto USD": s.amountUSD.toFixed(2), "Monto VES": (s.amountUSD * tasaBCV).toFixed(2) }));
+
+    // Sales
+    const salesData = filteredSales.map((s) => ({ Fecha: s.date, Descripción: s.description, Referencia: s.reference, "Monto USD": s.amountUSD.toFixed(2), "Monto VES": (s.amountUSD * tasaBCV).toFixed(2) }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(salesData), "Libro de Ventas");
-    XLSX.writeFile(wb, `contabilidad_COSO_${new Date().toISOString().split("T")[0]}.xlsx`);
+
+    // Summary sheet
+    const summaryData = [
+      { Concepto: "Ingresos Pacientes", "USD": totalIncomeUSD.toFixed(2), "VES": (totalIncomeUSD * tasaBCV).toFixed(2) },
+      { Concepto: "Ingresos Alquileres", "USD": totalRentalIncomeUSD.toFixed(2), "VES": (totalRentalIncomeUSD * tasaBCV).toFixed(2) },
+      { Concepto: "Total Ingresos", "USD": (totalIncomeUSD + totalRentalIncomeUSD).toFixed(2), "VES": ((totalIncomeUSD + totalRentalIncomeUSD) * tasaBCV).toFixed(2) },
+      { Concepto: "Pago Doctores", "USD": totalDoctorPayUSD.toFixed(2), "VES": (totalDoctorPayUSD * tasaBCV).toFixed(2) },
+      { Concepto: "Materiales", "USD": totalMaterialsUSD.toFixed(2), "VES": (totalMaterialsUSD * tasaBCV).toFixed(2) },
+      { Concepto: "Utilidad Pacientes", "USD": totalUtilityUSD.toFixed(2), "VES": (totalUtilityUSD * tasaBCV).toFixed(2) },
+      { Concepto: "Total Compras", "USD": totalPurchasesUSD.toFixed(2), "VES": (totalPurchasesUSD * tasaBCV).toFixed(2) },
+      { Concepto: "Total Ventas", "USD": totalSalesUSD.toFixed(2), "VES": (totalSalesUSD * tasaBCV).toFixed(2) },
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryData), "Resumen");
+
+    XLSX.writeFile(wb, `contabilidad_COSO_${periodLabel}_${new Date().toISOString().split("T")[0]}.xlsx`);
   };
 
-  const handleSetTasaBCV = async (value: number) => {
-    await setTasaBCV(value);
-  };
+  const handleSetTasaBCV = async (value: number) => { await setTasaBCV(value); };
 
   const renderEntryForm = (type: "compras" | "ventas") => (
     <div className="bg-muted rounded-lg p-4 space-y-3 mb-4">
@@ -118,7 +179,7 @@ export const AdminFinances = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <h2 className="font-display text-2xl font-bold flex items-center gap-2"><DollarSign className="w-6 h-6 text-gold" /> Finanzas</h2>
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2 bg-card rounded-lg px-3 py-2 gold-border">
@@ -127,6 +188,20 @@ export const AdminFinances = () => {
           </div>
           <button onClick={exportXLSX} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Download className="w-4 h-4" /> XLSX</button>
         </div>
+      </div>
+
+      {/* Period filter */}
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <CalendarDays className="w-4 h-4 text-gold" />
+        {(["dia", "semana", "mes", "todo"] as PeriodFilter[]).map((p) => (
+          <button key={p} onClick={() => setPeriodFilter(p)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${periodFilter === p ? "bg-gold text-gold-foreground" : "bg-card gold-border hover:bg-muted"}`}>
+            {p === "dia" ? "Día" : p === "semana" ? "Semana" : p === "mes" ? "Mes" : "Todo"}
+          </button>
+        ))}
+        {periodFilter !== "todo" && (
+          <input type="date" className="bg-card rounded-lg px-3 py-1.5 text-xs border border-border" value={customDate} onChange={(e) => setCustomDate(e.target.value)} />
+        )}
+        <span className="text-xs text-muted-foreground ml-1">{periodLabel}</span>
       </div>
 
       <div className="flex gap-2 mb-6 flex-wrap">
@@ -143,21 +218,41 @@ export const AdminFinances = () => {
 
       {activeTab === "resumen" && (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            <SummaryCard label="Ingresos USD" value={`$${totalIncomeUSD.toFixed(2)}`} sub={`Bs. ${(totalIncomeUSD * tasaBCV).toFixed(2)}`} />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <SummaryCard label="Ingresos Pacientes" value={`$${totalIncomeUSD.toFixed(2)}`} sub={`Bs. ${(totalIncomeUSD * tasaBCV).toFixed(2)}`} />
+            <SummaryCard label="Ingresos Alquileres" value={`$${totalRentalIncomeUSD.toFixed(2)}`} sub={`Bs. ${(totalRentalIncomeUSD * tasaBCV).toFixed(2)}`} />
             <SummaryCard label="Pago Doctores" value={`$${totalDoctorPayUSD.toFixed(2)}`} sub={`Bs. ${(totalDoctorPayUSD * tasaBCV).toFixed(2)}`} />
-            <SummaryCard label="Materiales" value={`$${totalMaterialsUSD.toFixed(2)}`} sub={`Bs. ${(totalMaterialsUSD * tasaBCV).toFixed(2)}`} />
             <SummaryCard label="Utilidad" value={`$${totalUtilityUSD.toFixed(2)}`} sub={`Bs. ${(totalUtilityUSD * tasaBCV).toFixed(2)}`} highlight />
           </div>
-          <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            <SummaryCard label="Materiales" value={`$${totalMaterialsUSD.toFixed(2)}`} sub={`Bs. ${(totalMaterialsUSD * tasaBCV).toFixed(2)}`} />
             <SummaryCard label="Total Compras" value={`$${totalPurchasesUSD.toFixed(2)}`} sub={`Bs. ${(totalPurchasesUSD * tasaBCV).toFixed(2)}`} />
             <SummaryCard label="Total Ventas" value={`$${totalSalesUSD.toFixed(2)}`} sub={`Bs. ${(totalSalesUSD * tasaBCV).toFixed(2)}`} />
           </div>
+
+          {/* Rental income details */}
+          {filteredRentals.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold mb-2 text-gold">Ingresos por Alquileres</h3>
+              <div className="space-y-2">
+                {filteredRentals.map((r, i) => (
+                  <div key={i} className="bg-card rounded-xl p-3 gold-border flex items-center justify-between text-sm">
+                    <div>
+                      <span className="font-medium">{r.tenantName}</span>
+                      <span className="text-muted-foreground ml-2">{r.date} • {r.allDay ? "Día completo" : `${r.startTime}-${r.endTime}`}</span>
+                    </div>
+                    <span className="font-semibold text-gold">${(r.rentalPrice || 0).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="space-y-3">
-            {finances.length === 0 ? (
-              <p className="text-muted-foreground text-center py-12">No hay registros financieros</p>
+            {filteredFinances.length === 0 ? (
+              <p className="text-muted-foreground text-center py-12">No hay registros financieros en este período</p>
             ) : (
-              finances.sort((a, b) => b.date.localeCompare(a.date)).map((f) => {
+              filteredFinances.sort((a, b) => b.date.localeCompare(a.date)).map((f) => {
                 const app = appointments.find((a) => a.id === f.appointmentId);
                 const doctor = app ? doctors.find((d) => d.id === app.doctorId) : null;
                 return (
@@ -199,9 +294,8 @@ export const AdminFinances = () => {
         </>
       )}
 
-      {activeTab === "compras" && (<>{renderEntryForm("compras")}{renderEntries(purchases, "compras")}</>)}
-      {activeTab === "ventas" && (<>{renderEntryForm("ventas")}{renderEntries(sales, "ventas")}</>)}
-      
+      {activeTab === "compras" && (<>{renderEntryForm("compras")}{renderEntries(filteredPurchases, "compras")}</>)}
+      {activeTab === "ventas" && (<>{renderEntryForm("ventas")}{renderEntries(filteredSales, "ventas")}</>)}
     </div>
   );
 };

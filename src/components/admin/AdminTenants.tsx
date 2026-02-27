@@ -1,28 +1,32 @@
 
 import { useState } from "react";
 import { useClinicData, Tenant, TenantBlockedSlot } from "@/hooks/useClinicData";
-import { Building2, Plus, Save, Trash2, Edit, Lock, Calendar, X, Check, Mail, MessageCircle, Clock, Sun, Moon, User, CreditCard, Phone, Briefcase } from "lucide-react";
+import { Building2, Plus, Save, Trash2, Edit, Lock, Calendar, X, Check, Mail, MessageCircle, Clock, Sun, Moon, User, CreditCard, Phone, Briefcase, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { getCaracasToday, getCaracasNow, getAllAvailableSlots, isSlotBlockedByTenant } from "@/lib/scheduleUtils";
 
 export const AdminTenants = () => {
-  const { tenants, appointments, addTenant, updateTenant, deleteTenant, addTenantBlockedSlot, removeTenantBlockedSlot, rentalRequests, approveRentalRequest, rejectRentalRequest } = useClinicData();
+  const { tenants, appointments, addTenant, updateTenant, deleteTenant, addTenantBlockedSlot, removeTenantBlockedSlot, rentalRequests, approveRentalRequest, rejectRentalRequest, updateBlockedSlot } = useClinicData();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [blockingTenant, setBlockingTenant] = useState<string | null>(null);
+  const [editingRequest, setEditingRequest] = useState<string | null>(null);
+  const [requestEditForm, setRequestEditForm] = useState<{
+    rentalMode: string; rentalPrice: number; date: string; startTime: string; endTime: string;
+  }>({ rentalMode: "turno", rentalPrice: 0, date: "", startTime: "", endTime: "" });
+  // Editing existing blocked slots
+  const [editingSlot, setEditingSlot] = useState<string | null>(null);
+  const [slotEditForm, setSlotEditForm] = useState<{
+    date: string; startTime: string; endTime: string; rentalPrice: number;
+  }>({ date: "", startTime: "", endTime: "", rentalPrice: 0 });
   const [form, setForm] = useState({
     firstName: "", lastName: "", cov: "", email: "", phone: "", cedula: "",
     rentalMode: "turno" as "turno" | "percent", rentalPrice: 0,
-    // Schedule fields (same as public form)
-    date: "",
-    turnoBlock: "" as "" | "am" | "pm",
-    selectedHours: [] as string[],
+    date: "", turnoBlock: "" as "" | "am" | "pm", selectedHours: [] as string[],
   });
   const [blockForm, setBlockForm] = useState({
-    date: "",
-    rentalMode: "" as "" | "turno" | "percent",
-    turnoBlock: "" as "" | "am" | "pm",
-    selectedHours: [] as string[],
+    date: "", rentalMode: "" as "" | "turno" | "percent",
+    turnoBlock: "" as "" | "am" | "pm", selectedHours: [] as string[],
   });
 
   const caracasToday = getCaracasToday();
@@ -38,7 +42,6 @@ export const AdminTenants = () => {
     setBlockForm({ date: "", rentalMode: "", turnoBlock: "", selectedHours: [] });
   };
 
-  // Availability check for a date + block
   const isBlockAvailableFor = (date: string, block: "am" | "pm"): boolean => {
     if (!date) return false;
     const startH = block === "am" ? 8 : 13;
@@ -50,13 +53,10 @@ export const AdminTenants = () => {
     const actualEnd = day === 6 && block === "am" ? 14 : endH;
     const isToday = date === caracasToday;
     const currentHour = caracasNow.getHours();
-
     for (let h = startH; h < actualEnd; h++) {
       if (isToday && h <= currentHour) continue;
       const time = `${h.toString().padStart(2, "0")}:00`;
-      const hasAppointment = appointments.some(
-        (a) => a.date === date && a.status !== "cancelada" && parseInt(a.time.split(":")[0]) === h
-      );
+      const hasAppointment = appointments.some((a) => a.date === date && a.status !== "cancelada" && parseInt(a.time.split(":")[0]) === h);
       if (hasAppointment) return false;
       if (isSlotBlockedByTenant(date, time, tenants).blocked) return false;
     }
@@ -86,15 +86,11 @@ export const AdminTenants = () => {
 
   const handleSave = async () => {
     if (!form.firstName || !form.lastName) { toast.error("Nombre y apellido son obligatorios"); return; }
-    
     if (editing) {
       await updateTenant(editing, { firstName: form.firstName, lastName: form.lastName, cov: form.cov, email: form.email, phone: form.phone, cedula: form.cedula, rentalMode: form.rentalMode, rentalPrice: form.rentalPrice });
       toast.success("Inquilino actualizado");
     } else {
-      // Create tenant first
       const newTenant = await addTenant({ firstName: form.firstName, lastName: form.lastName, cov: form.cov, email: form.email, phone: form.phone, cedula: form.cedula, rentalMode: form.rentalMode, rentalPrice: form.rentalPrice });
-
-      // If date and schedule selected, also block slots
       if (form.date && form.rentalMode) {
         const tenantId = newTenant?.id;
         if (tenantId) {
@@ -103,14 +99,11 @@ export const AdminTenants = () => {
             const startTime = hours[0];
             const lastH = parseInt(hours[hours.length - 1]);
             const endTime = `${(lastH + 1).toString().padStart(2, "0")}:00`;
-            await addTenantBlockedSlot(tenantId, {
-              date: form.date, allDay: false, startTime, endTime, status: 'approved',
-            });
+            await addTenantBlockedSlot(tenantId, { date: form.date, allDay: false, startTime, endTime, status: 'approved' });
           } else if (form.rentalMode === "percent" && form.selectedHours.length > 0) {
             const sorted = [...form.selectedHours].sort();
             const ranges: { start: string; end: string }[] = [];
-            let rangeStart = sorted[0];
-            let prevHour = parseInt(sorted[0]);
+            let rangeStart = sorted[0]; let prevHour = parseInt(sorted[0]);
             for (let i = 1; i <= sorted.length; i++) {
               const currentH = i < sorted.length ? parseInt(sorted[i]) : -1;
               if (currentH !== prevHour + 1) {
@@ -120,9 +113,7 @@ export const AdminTenants = () => {
               prevHour = currentH;
             }
             for (const range of ranges) {
-              await addTenantBlockedSlot(tenantId, {
-                date: form.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved',
-              });
+              await addTenantBlockedSlot(tenantId, { date: form.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved' });
             }
           }
         }
@@ -140,41 +131,27 @@ export const AdminTenants = () => {
 
   const toggleHour = (setter: "form" | "block", time: string) => {
     if (setter === "form") {
-      setForm(prev => ({
-        ...prev,
-        selectedHours: prev.selectedHours.includes(time)
-          ? prev.selectedHours.filter(t => t !== time)
-          : [...prev.selectedHours, time].sort(),
-      }));
+      setForm(prev => ({ ...prev, selectedHours: prev.selectedHours.includes(time) ? prev.selectedHours.filter(t => t !== time) : [...prev.selectedHours, time].sort() }));
     } else {
-      setBlockForm(prev => ({
-        ...prev,
-        selectedHours: prev.selectedHours.includes(time)
-          ? prev.selectedHours.filter(t => t !== time)
-          : [...prev.selectedHours, time].sort(),
-      }));
+      setBlockForm(prev => ({ ...prev, selectedHours: prev.selectedHours.includes(time) ? prev.selectedHours.filter(t => t !== time) : [...prev.selectedHours, time].sort() }));
     }
   };
 
   const handleAddBlocks = async (tenantId: string) => {
     if (!blockForm.date || !blockForm.rentalMode) { toast.error("Selecciona fecha y modalidad"); return; }
-
     if (blockForm.rentalMode === "turno") {
       if (!blockForm.turnoBlock) { toast.error("Selecciona el turno (AM o PM)"); return; }
       const hours = getTurnoHours(blockForm.date, blockForm.turnoBlock as "am" | "pm");
       const startTime = hours[0];
       const lastH = parseInt(hours[hours.length - 1]);
       const endTime = `${(lastH + 1).toString().padStart(2, "0")}:00`;
-      await addTenantBlockedSlot(tenantId, {
-        date: blockForm.date, allDay: false, startTime, endTime, status: 'approved',
-      });
+      await addTenantBlockedSlot(tenantId, { date: blockForm.date, allDay: false, startTime, endTime, status: 'approved' });
       toast.success(`Turno ${blockForm.turnoBlock.toUpperCase()} bloqueado para ${blockForm.date}`);
     } else {
       if (blockForm.selectedHours.length === 0) { toast.error("Selecciona al menos una hora"); return; }
       const sorted = [...blockForm.selectedHours].sort();
       const ranges: { start: string; end: string }[] = [];
-      let rangeStart = sorted[0];
-      let prevHour = parseInt(sorted[0]);
+      let rangeStart = sorted[0]; let prevHour = parseInt(sorted[0]);
       for (let i = 1; i <= sorted.length; i++) {
         const currentH = i < sorted.length ? parseInt(sorted[i]) : -1;
         if (currentH !== prevHour + 1) {
@@ -184,16 +161,59 @@ export const AdminTenants = () => {
         prevHour = currentH;
       }
       for (const range of ranges) {
-        await addTenantBlockedSlot(tenantId, {
-          date: blockForm.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved',
-        });
+        await addTenantBlockedSlot(tenantId, { date: blockForm.date, allDay: false, startTime: range.start, endTime: range.end, status: 'approved' });
       }
       toast.success(`${sorted.length} hora(s) bloqueada(s) en la agenda`);
     }
     resetBlockForm();
   };
 
-  // Schedule selection UI (reusable for both new tenant form and existing tenant blocking)
+  const startEditRequest = (req: typeof rentalRequests[0]) => {
+    setEditingRequest(req.id);
+    setRequestEditForm({
+      rentalMode: req.rentalMode, rentalPrice: req.rentalPrice || 0,
+      date: req.date, startTime: req.startTime || "", endTime: req.endTime || "",
+    });
+  };
+
+  const handleApproveRequest = async (reqId: string) => {
+    if (editingRequest === reqId) {
+      // Save edits first then approve
+      await updateBlockedSlot(reqId, {
+        rentalMode: requestEditForm.rentalMode,
+        rentalPrice: requestEditForm.rentalPrice,
+        date: requestEditForm.date,
+        startTime: requestEditForm.startTime,
+        endTime: requestEditForm.endTime,
+      });
+    }
+    await approveRentalRequest(reqId);
+    toast.success("✅ Alquiler aprobado — Horario bloqueado");
+    setEditingRequest(null);
+  };
+
+  const startEditSlot = (sl: TenantBlockedSlot) => {
+    setEditingSlot(sl.id);
+    setSlotEditForm({
+      date: sl.date,
+      startTime: sl.startTime || "",
+      endTime: sl.endTime || "",
+      rentalPrice: sl.rentalPrice || 0,
+    });
+  };
+
+  const handleSaveSlotEdit = async (slotId: string) => {
+    await updateBlockedSlot(slotId, {
+      date: slotEditForm.date,
+      startTime: slotEditForm.startTime,
+      endTime: slotEditForm.endTime,
+      rentalPrice: slotEditForm.rentalPrice,
+    });
+    toast.success("Horario actualizado");
+    setEditingSlot(null);
+  };
+
+  // Schedule selection UI
   const ScheduleSelector = ({ date, rentalMode, turnoBlock, selectedHours, onDateChange, onModeChange, onTurnoChange, onToggleHour, rentalPrice, onPriceChange }: {
     date: string; rentalMode: string; turnoBlock: string; selectedHours: string[];
     onDateChange: (d: string) => void; onModeChange: (m: string) => void; onTurnoChange: (t: string) => void; onToggleHour: (h: string) => void;
@@ -202,65 +222,47 @@ export const AdminTenants = () => {
     const amAvail = date ? isBlockAvailableFor(date, "am") : false;
     const pmAvail = date ? isBlockAvailableFor(date, "pm") : false;
     const pSlots = date && rentalMode === "percent" ? getAvailableSlots(date) : [];
-
     return (
       <div className="space-y-4">
-        {/* Date */}
         <div>
           <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Clock className="w-3 h-3 text-gold" /> Fecha *</label>
           <input type="date" min={caracasToday} className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={date} onChange={(e) => onDateChange(e.target.value)} />
         </div>
-
-        {/* Rental mode */}
         {date && (
           <div className="space-y-3">
             <p className="text-xs font-semibold flex items-center gap-1"><Building2 className="w-3 h-3 text-gold" /> Modalidad de Alquiler</p>
             <div className="grid grid-cols-2 gap-3">
-              <button type="button" onClick={() => onModeChange("turno")}
-                className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${rentalMode === "turno" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
+              <button type="button" onClick={() => onModeChange("turno")} className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${rentalMode === "turno" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
                 <Clock className="w-4 h-4" /> Por Turno
               </button>
-              <button type="button" onClick={() => onModeChange("percent")}
-                className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${rentalMode === "percent" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
+              <button type="button" onClick={() => onModeChange("percent")} className={`py-3 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-1 ${rentalMode === "percent" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
                 <Building2 className="w-4 h-4" /> Por Porcentaje (%)
               </button>
             </div>
           </div>
         )}
-
-        {/* Price field (admin only) */}
         {date && rentalMode && onPriceChange && (
           <div>
             <label className="block text-xs font-medium mb-1">{rentalMode === "turno" ? "Precio por Turno (USD)" : "Porcentaje (%)"}</label>
             <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={rentalPrice || 0} onChange={(e) => onPriceChange(parseFloat(e.target.value) || 0)} />
           </div>
         )}
-
-        {/* Turno AM/PM */}
         {date && rentalMode === "turno" && (
           <div className="space-y-3">
             <p className="text-xs font-medium">Seleccione el turno:</p>
             <div className="grid grid-cols-2 gap-3">
-              <button type="button" disabled={!amAvail} onClick={() => onTurnoChange("am")}
-                className={`py-4 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-2 ${!amAvail ? "bg-muted/50 border-border text-muted-foreground/50 cursor-not-allowed" : turnoBlock === "am" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
-                <Sun className="w-5 h-5" />
-                <span className="font-semibold">Mañana (AM)</span>
-                <span className="text-xs opacity-75">8:00 AM - 12:00 PM</span>
+              <button type="button" disabled={!amAvail} onClick={() => onTurnoChange("am")} className={`py-4 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-2 ${!amAvail ? "bg-muted/50 border-border text-muted-foreground/50 cursor-not-allowed" : turnoBlock === "am" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
+                <Sun className="w-5 h-5" /><span className="font-semibold">Mañana (AM)</span><span className="text-xs opacity-75">8:00 AM - 12:00 PM</span>
                 {!amAvail && <span className="text-xs text-destructive">No disponible</span>}
               </button>
-              <button type="button" disabled={!pmAvail} onClick={() => onTurnoChange("pm")}
-                className={`py-4 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-2 ${!pmAvail ? "bg-muted/50 border-border text-muted-foreground/50 cursor-not-allowed" : turnoBlock === "pm" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
-                <Moon className="w-5 h-5" />
-                <span className="font-semibold">Tarde (PM)</span>
-                <span className="text-xs opacity-75">1:00 PM - 5:00 PM</span>
+              <button type="button" disabled={!pmAvail} onClick={() => onTurnoChange("pm")} className={`py-4 rounded-lg text-sm font-medium transition-all border flex flex-col items-center gap-2 ${!pmAvail ? "bg-muted/50 border-border text-muted-foreground/50 cursor-not-allowed" : turnoBlock === "pm" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
+                <Moon className="w-5 h-5" /><span className="font-semibold">Tarde (PM)</span><span className="text-xs opacity-75">1:00 PM - 5:00 PM</span>
                 {!pmAvail && <span className="text-xs text-destructive">No disponible</span>}
               </button>
             </div>
             {!amAvail && !pmAvail && <p className="text-xs text-destructive">No hay turnos disponibles para esta fecha.</p>}
           </div>
         )}
-
-        {/* Percent hours */}
         {date && rentalMode === "percent" && (
           <div className="space-y-3">
             {pSlots.length > 0 ? (
@@ -268,8 +270,7 @@ export const AdminTenants = () => {
                 <p className="text-xs font-medium">Seleccione las horas disponibles:</p>
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                   {pSlots.map((slot) => (
-                    <button key={slot} type="button" onClick={() => onToggleHour(slot)}
-                      className={`py-2.5 rounded-lg text-xs font-medium transition-all border ${selectedHours.includes(slot) ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
+                    <button key={slot} type="button" onClick={() => onToggleHour(slot)} className={`py-2.5 rounded-lg text-xs font-medium transition-all border ${selectedHours.includes(slot) ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
                       {slot}
                     </button>
                   ))}
@@ -297,19 +298,14 @@ export const AdminTenants = () => {
           {rentalRequests.map((req) => {
             const cleanPhone = req.requesterPhone.replace(/[^0-9+]/g, "");
             const waPhone = cleanPhone.startsWith("+") ? cleanPhone.slice(1) : cleanPhone;
+            const isEditing = editingRequest === req.id;
             return (
-              <div key={req.id} className="bg-card rounded-xl p-5 border border-orange-500/30 space-y-2">
+              <div key={req.id} className="bg-card rounded-xl p-5 border border-orange-500/30 space-y-3">
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div>
                     <p className="font-semibold">{req.requesterFirstName} {req.requesterLastName}</p>
                     <p className="text-sm text-muted-foreground">COV: {req.requesterCov} • Cédula: {req.requesterCedula}</p>
                     <p className="text-sm text-muted-foreground">{req.requesterEmail} • {req.requesterPhone}</p>
-                    <p className="text-sm font-medium mt-1">
-                      {req.rentalMode === "turno" ? `Turno: $${(req.rentalPrice || 0).toFixed(2)} USD` : `Porcentaje: ${req.rentalPrice}%`}
-                    </p>
-                    <p className="text-sm text-gold font-medium mt-1">
-                      📅 {req.date} • {req.allDay ? "Día completo" : `${req.startTime} - ${req.endTime}`}
-                    </p>
                   </div>
                   <div className="flex items-center gap-1 flex-wrap">
                     {req.requesterPhone && (
@@ -318,10 +314,54 @@ export const AdminTenants = () => {
                     {req.requesterEmail && (
                       <a href={`mailto:${req.requesterEmail}`} className="p-1.5 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Correo"><Mail className="w-4 h-4" /></a>
                     )}
-                    <button onClick={async () => { await approveRentalRequest(req.id); toast.success("✅ Alquiler aprobado — Horario bloqueado permanentemente"); }} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Aprobar"><Check className="w-4 h-4" /></button>
+                    <button onClick={() => isEditing ? setEditingRequest(null) : startEditRequest(req)} className={`p-1.5 rounded-lg ${isEditing ? "bg-gold/20 text-gold" : "bg-gold/10 text-gold hover:bg-gold/20"}`} title="Editar"><Edit className="w-4 h-4" /></button>
+                    <button onClick={() => handleApproveRequest(req.id)} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Aprobar"><Check className="w-4 h-4" /></button>
                     <button onClick={async () => { await rejectRentalRequest(req.id); toast.info("Solicitud rechazada — Horario liberado"); }} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Rechazar"><X className="w-4 h-4" /></button>
                   </div>
                 </div>
+
+                {/* Editable details */}
+                {isEditing ? (
+                  <div className="bg-muted rounded-lg p-4 space-y-3">
+                    <p className="text-xs font-semibold flex items-center gap-1"><Edit className="w-3 h-3 text-gold" /> Editar antes de aprobar</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Modalidad</label>
+                        <select className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.rentalMode} onChange={(e) => setRequestEditForm(prev => ({ ...prev, rentalMode: e.target.value }))}>
+                          <option value="turno">Por Turno</option>
+                          <option value="percent">Por Porcentaje (%)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">{requestEditForm.rentalMode === "turno" ? "Precio USD" : "Porcentaje %"}</label>
+                        <input type="number" step="0.01" min="0" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.rentalPrice} onChange={(e) => setRequestEditForm(prev => ({ ...prev, rentalPrice: parseFloat(e.target.value) || 0 }))} />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Fecha</label>
+                        <input type="date" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.date} onChange={(e) => setRequestEditForm(prev => ({ ...prev, date: e.target.value }))} />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Inicio</label>
+                        <input type="time" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.startTime} onChange={(e) => setRequestEditForm(prev => ({ ...prev, startTime: e.target.value }))} />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Fin</label>
+                        <input type="time" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-gold focus:outline-none" value={requestEditForm.endTime} onChange={(e) => setRequestEditForm(prev => ({ ...prev, endTime: e.target.value }))} />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-3 text-sm">
+                    <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 text-gold" />
+                      {req.rentalMode === "turno" ? `$${(req.rentalPrice || 0).toFixed(2)} USD` : `${req.rentalPrice}%`}
+                    </span>
+                    <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-gold" />
+                      {req.date} • {req.allDay ? "Día completo" : `${req.startTime} - ${req.endTime}`}
+                    </span>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -342,8 +382,6 @@ export const AdminTenants = () => {
       {showForm && (
         <div className="bg-muted rounded-xl p-5 space-y-5">
           <h4 className="font-semibold text-sm flex items-center gap-2"><Building2 className="w-4 h-4 text-gold" /> {editing ? "Editar Inquilino" : "Nuevo Inquilino"}</h4>
-          
-          {/* Personal Data - matching public form */}
           <div className="space-y-3">
             <h3 className="text-xs font-semibold flex items-center gap-2"><User className="w-3.5 h-3.5 text-gold" /> Datos Personales</h3>
             <div className="grid grid-cols-2 gap-3">
@@ -380,27 +418,18 @@ export const AdminTenants = () => {
               </div>
             </div>
           </div>
-
-          {/* Schedule - same as public form */}
           {!editing && (
             <div className="space-y-3">
               <h3 className="text-xs font-semibold flex items-center gap-2"><Calendar className="w-3.5 h-3.5 text-gold" /> Fecha y Horario</h3>
-              <ScheduleSelector
-                date={form.date}
-                rentalMode={form.rentalMode}
-                turnoBlock={form.turnoBlock}
-                selectedHours={form.selectedHours}
+              <ScheduleSelector date={form.date} rentalMode={form.rentalMode} turnoBlock={form.turnoBlock} selectedHours={form.selectedHours}
                 onDateChange={(d) => setForm(prev => ({ ...prev, date: d, turnoBlock: "", selectedHours: [] }))}
                 onModeChange={(m) => setForm(prev => ({ ...prev, rentalMode: m as "turno" | "percent", turnoBlock: "", selectedHours: [] }))}
                 onTurnoChange={(t) => setForm(prev => ({ ...prev, turnoBlock: t as "" | "am" | "pm" }))}
                 onToggleHour={(h) => toggleHour("form", h)}
-                rentalPrice={form.rentalPrice}
-                onPriceChange={(p) => setForm(prev => ({ ...prev, rentalPrice: p }))}
+                rentalPrice={form.rentalPrice} onPriceChange={(p) => setForm(prev => ({ ...prev, rentalPrice: p }))}
               />
             </div>
           )}
-
-          {/* Price only when editing */}
           {editing && (
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -416,7 +445,6 @@ export const AdminTenants = () => {
               </div>
             </div>
           )}
-
           <div className="flex gap-2">
             <button onClick={handleSave} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Save className="w-4 h-4" /> Guardar</button>
             <button onClick={resetForm} className="bg-muted-foreground/10 text-foreground px-4 py-2 rounded-lg text-sm">Cancelar</button>
@@ -446,20 +474,14 @@ export const AdminTenants = () => {
             {blockingTenant === t.id && (
               <div className="bg-muted rounded-lg p-4 space-y-4">
                 <h4 className="font-semibold text-sm flex items-center gap-1"><Calendar className="w-4 h-4" /> Agendar Horario para {t.firstName}</h4>
-                <ScheduleSelector
-                  date={blockForm.date}
-                  rentalMode={blockForm.rentalMode}
-                  turnoBlock={blockForm.turnoBlock}
-                  selectedHours={blockForm.selectedHours}
+                <ScheduleSelector date={blockForm.date} rentalMode={blockForm.rentalMode} turnoBlock={blockForm.turnoBlock} selectedHours={blockForm.selectedHours}
                   onDateChange={(d) => setBlockForm({ date: d, rentalMode: "", turnoBlock: "", selectedHours: [] })}
                   onModeChange={(m) => setBlockForm(prev => ({ ...prev, rentalMode: m as "" | "turno" | "percent", turnoBlock: "", selectedHours: [] }))}
                   onTurnoChange={(t) => setBlockForm(prev => ({ ...prev, turnoBlock: t as "" | "am" | "pm" }))}
                   onToggleHour={(h) => toggleHour("block", h)}
                 />
                 {((blockForm.rentalMode === "turno" && blockForm.turnoBlock) || (blockForm.rentalMode === "percent" && blockForm.selectedHours.length > 0)) && (
-                  <button onClick={() => handleAddBlocks(t.id)} className="w-full bg-gold text-gold-foreground py-2.5 rounded-lg text-sm font-semibold">
-                    Bloquear Horario
-                  </button>
+                  <button onClick={() => handleAddBlocks(t.id)} className="w-full bg-gold text-gold-foreground py-2.5 rounded-lg text-sm font-semibold">Bloquear Horario</button>
                 )}
               </div>
             )}
@@ -468,9 +490,29 @@ export const AdminTenants = () => {
               <div className="space-y-1">
                 <p className="text-xs font-semibold text-muted-foreground">Horarios bloqueados:</p>
                 {t.blockedSlots.sort((a, b) => a.date.localeCompare(b.date)).map((sl) => (
-                  <div key={sl.id} className="flex items-center justify-between bg-muted rounded-lg px-3 py-2 text-xs">
-                    <span>{sl.date} — {sl.allDay ? "Día completo" : `${sl.startTime} - ${sl.endTime}`}</span>
-                    <button onClick={async () => { await removeTenantBlockedSlot(t.id, sl.id); toast.success("Bloqueo removido"); }} className="text-destructive hover:text-destructive/80"><Trash2 className="w-3 h-3" /></button>
+                  <div key={sl.id} className="bg-muted rounded-lg px-3 py-2 text-xs space-y-2">
+                    {editingSlot === sl.id ? (
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-4 gap-2">
+                          <input type="date" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.date} onChange={(e) => setSlotEditForm(prev => ({ ...prev, date: e.target.value }))} />
+                          <input type="time" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.startTime} onChange={(e) => setSlotEditForm(prev => ({ ...prev, startTime: e.target.value }))} />
+                          <input type="time" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.endTime} onChange={(e) => setSlotEditForm(prev => ({ ...prev, endTime: e.target.value }))} />
+                          <input type="number" step="0.01" placeholder="Precio USD" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.rentalPrice} onChange={(e) => setSlotEditForm(prev => ({ ...prev, rentalPrice: parseFloat(e.target.value) || 0 }))} />
+                        </div>
+                        <div className="flex gap-1">
+                          <button onClick={() => handleSaveSlotEdit(sl.id)} className="bg-gold text-gold-foreground px-2 py-1 rounded text-xs font-semibold flex items-center gap-1"><Save className="w-3 h-3" /> Guardar</button>
+                          <button onClick={() => setEditingSlot(null)} className="text-xs text-muted-foreground hover:underline">Cancelar</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <span>{sl.date} — {sl.allDay ? "Día completo" : `${sl.startTime} - ${sl.endTime}`} {sl.rentalPrice ? `• $${sl.rentalPrice.toFixed(2)}` : ""}</span>
+                        <div className="flex gap-1">
+                          <button onClick={() => startEditSlot(sl)} className="text-gold hover:text-gold/80"><Edit className="w-3 h-3" /></button>
+                          <button onClick={async () => { await removeTenantBlockedSlot(t.id, sl.id); toast.success("Bloqueo removido"); }} className="text-destructive hover:text-destructive/80"><Trash2 className="w-3 h-3" /></button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
