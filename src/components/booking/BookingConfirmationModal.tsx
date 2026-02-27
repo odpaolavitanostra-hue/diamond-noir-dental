@@ -113,10 +113,15 @@ const BookingConfirmationModal = ({ open, onClose, patientName, date, time, isPe
             </div>
           )}
 
-          {/* Hint - only for patients, not rental requests */}
+          {/* Address hint */}
           {!isPendingConfirmation && (
-            <p className="text-xs text-muted-foreground">
-              Por favor, llega <strong>5 minutos antes</strong> para tu ficha clínica.
+            <p className="text-xs text-muted-foreground text-center">
+              ¡Te esperamos en <strong>C.C Novocentro piso 1, local 1-02, Puerto La Cruz</strong>! Llega <strong>5 minutos antes</strong> para tu ficha clínica.
+            </p>
+          )}
+          {isPendingConfirmation && (
+            <p className="text-xs text-muted-foreground text-center">
+              Ubicación: <strong>C.C Novocentro piso 1, local 1-02, Puerto La Cruz</strong>.
             </p>
           )}
 

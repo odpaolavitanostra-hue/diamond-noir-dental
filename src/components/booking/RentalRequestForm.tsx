@@ -249,22 +249,22 @@ const RentalRequestForm = ({ open, onOpenChange }: RentalRequestFormProps) => {
               <h3 className="text-sm font-semibold flex items-center gap-2"><User className="w-4 h-4 text-gold" /> Datos Personales</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium mb-1 flex items-center gap-1"><CreditCard className="w-3 h-3" /> Cédula *</label>
-                  <input type="text" inputMode="numeric" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.cedula} onChange={(e) => update("cedula", e.target.value.replace(/[^0-9]/g, ""))} maxLength={20} placeholder="12345678 (auto-completa)" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Briefcase className="w-3 h-3" /> COV *</label>
-                  <input type="text" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.cov} onChange={(e) => update("cov", e.target.value)} maxLength={20} placeholder="COV-12345" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
                   <label className="block text-xs font-medium mb-1">Nombre *</label>
                   <input type="text" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.firstName} onChange={(e) => update("firstName", e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, ""))} maxLength={50} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium mb-1">Apellido *</label>
                   <input type="text" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.lastName} onChange={(e) => update("lastName", e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, ""))} maxLength={50} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium mb-1 flex items-center gap-1"><CreditCard className="w-3 h-3" /> Cédula *</label>
+                  <input type="text" inputMode="numeric" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.cedula} onChange={(e) => update("cedula", e.target.value.replace(/[^0-9]/g, ""))} maxLength={20} placeholder="12345678 (auto-completa)" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1 flex items-center gap-1"><Briefcase className="w-3 h-3" /> COV *</label>
+                  <input type="text" className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={form.cov} onChange={(e) => update("cov", e.target.value)} maxLength={20} placeholder="COV-12345" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">

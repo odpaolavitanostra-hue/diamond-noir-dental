@@ -1,9 +1,11 @@
 
 import { useState } from "react";
 import { useClinicData } from "@/hooks/useClinicData";
-import { DollarSign, Download, Plus, Trash2, BookOpen, ShoppingCart, Receipt, Edit, Save, X, CalendarDays } from "lucide-react";
+import { DollarSign, Download, Plus, Trash2, BookOpen, ShoppingCart, Receipt, Edit, Save, X, CalendarDays, FileText, Stethoscope } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
+import InvoiceGenerator from "./InvoiceGenerator";
+import RecipeGenerator from "./RecipeGenerator";
 
 interface AccountingEntry {
   id: string;
@@ -41,7 +43,9 @@ const getDateRange = (filter: PeriodFilter, customDate?: string): { start: strin
 const inRange = (date: string, start: string, end: string) => date >= start && date <= end;
 
 export const AdminFinances = () => {
-  const { finances, appointments, doctors, tenants, tasaBCV, setTasaBCV, updateFinance } = useClinicData();
+  const { finances, appointments, doctors, patients, tenants, tasaBCV, setTasaBCV, updateFinance } = useClinicData();
+  const [invoiceData, setInvoiceData] = useState<{ appointment: any; doctor: any; finance: any } | null>(null);
+  const [recipeOpen, setRecipeOpen] = useState(false);
   const [editingFinance, setEditingFinance] = useState<string | null>(null);
   const [editDoctorPay, setEditDoctorPay] = useState("");
   const [activeTab, setActiveTab] = useState<"resumen" | "compras" | "ventas">("resumen");
@@ -189,6 +193,7 @@ export const AdminFinances = () => {
             <input type="number" step="0.01" className="w-24 bg-muted rounded px-2 py-1 text-sm border border-border text-center" value={tasaBCV} onChange={(e) => handleSetTasaBCV(parseFloat(e.target.value) || 0)} />
           </div>
           <button onClick={exportXLSX} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Download className="w-4 h-4" /> XLSX</button>
+          <button onClick={() => setRecipeOpen(true)} className="bg-card gold-border px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1 hover:bg-muted"><Stethoscope className="w-4 h-4 text-gold" /> Recipe</button>
         </div>
       </div>
 
@@ -269,6 +274,7 @@ export const AdminFinances = () => {
                           <p className="text-xs text-muted-foreground">Bs. {(f.utilityUSD * f.tasaBCV).toFixed(2)}</p>
                         </div>
                         <button onClick={() => { setEditingFinance(editingFinance === f.id ? null : f.id); setEditDoctorPay(f.doctorPayUSD.toString()); }} className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Editar pago doctor"><Edit className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => setInvoiceData({ appointment: app, doctor, finance: f })} className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Generar factura"><FileText className="w-3.5 h-3.5" /></button>
                       </div>
                     </div>
                     <div className="flex gap-4 mt-2 text-xs text-muted-foreground flex-wrap">
@@ -300,6 +306,22 @@ export const AdminFinances = () => {
 
       {activeTab === "compras" && (<>{renderEntryForm("compras")}{renderEntries(filteredPurchases, "compras")}</>)}
       {activeTab === "ventas" && (<>{renderEntryForm("ventas")}{renderEntries(filteredSales, "ventas")}</>)}
+
+      <InvoiceGenerator
+        open={!!invoiceData}
+        onOpenChange={(v) => !v && setInvoiceData(null)}
+        appointment={invoiceData?.appointment || null}
+        doctor={invoiceData?.doctor || null}
+        finance={invoiceData?.finance || null}
+        tasaBCV={tasaBCV}
+      />
+
+      <RecipeGenerator
+        open={recipeOpen}
+        onOpenChange={setRecipeOpen}
+        doctors={doctors}
+        patients={patients}
+      />
     </div>
   );
 };
