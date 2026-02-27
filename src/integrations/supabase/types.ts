@@ -75,29 +75,35 @@ export type Database = {
       }
       doctors: {
         Row: {
+          cov: string
           created_at: string
           email: string
           id: string
           name: string
           pay_model: string
+          phone: string
           rate: number
           specialty: string
         }
         Insert: {
+          cov?: string
           created_at?: string
           email: string
           id?: string
           name: string
           pay_model?: string
+          phone?: string
           rate?: number
           specialty?: string
         }
         Update: {
+          cov?: string
           created_at?: string
           email?: string
           id?: string
           name?: string
           pay_model?: string
+          phone?: string
           rate?: number
           specialty?: string
         }

@@ -14,7 +14,7 @@ interface InvoiceGeneratorProps {
 
 const CLINIC_INFO = {
   name: "Clínica Odontológica Salud Oriente",
-  rif: "J-00000000-0",
+  rif: "J-50800151-6",
   address: "C.C Novocentro piso 1, local 1-02, Puerto La Cruz 6023, Anzoátegui",
   phone: "0422-7180013",
   email: "contacto@saludoriente.com",
