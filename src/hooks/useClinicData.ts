@@ -470,25 +470,29 @@ export function useClinicData() {
     inv("tenant_blocked_slots");
   };
 
-  // ─── Rental Requests (standalone blocked slots without tenant — all statuses) ───
+  // ─── Rental Requests (ALL blocked slots — pending + confirmed, with or without tenant) ───
   const rentalRequests = blockedSlots
-    .filter((slot) => !slot.tenant_id && (slot.status === 'pending_review' || slot.status === 'approved'))
-    .map((slot) => ({
-      id: slot.id,
-      date: slot.date,
-      allDay: slot.all_day,
-      startTime: slot.start_time || undefined,
-      endTime: slot.end_time || undefined,
-      status: slot.status || 'pending_review',
-      requesterFirstName: slot.requester_first_name || '',
-      requesterLastName: slot.requester_last_name || '',
-      requesterCedula: slot.requester_cedula || '',
-      requesterCov: slot.requester_cov || '',
-      requesterEmail: slot.requester_email || '',
-      requesterPhone: slot.requester_phone || '',
-      rentalMode: slot.rental_mode || 'turno',
-      rentalPrice: slot.rental_price || 0,
-    }));
+    .filter((slot) => slot.status === 'pending_review' || slot.status === 'approved')
+    .map((slot) => {
+      const tenant = slot.tenant_id ? rawTenantsById.get(slot.tenant_id) : null;
+      return {
+        id: slot.id,
+        date: slot.date,
+        allDay: slot.all_day,
+        startTime: slot.start_time || undefined,
+        endTime: slot.end_time || undefined,
+        status: slot.status || 'pending_review',
+        tenantId: slot.tenant_id || undefined,
+        requesterFirstName: tenant?.first_name || slot.requester_first_name || '',
+        requesterLastName: tenant?.last_name || slot.requester_last_name || '',
+        requesterCedula: tenant?.cedula || slot.requester_cedula || '',
+        requesterCov: tenant?.cov || slot.requester_cov || '',
+        requesterEmail: tenant?.email || slot.requester_email || '',
+        requesterPhone: tenant?.phone || slot.requester_phone || '',
+        rentalMode: slot.rental_mode || tenant?.rental_mode || 'turno',
+        rentalPrice: slot.rental_price || tenant?.rental_price || 0,
+      };
+    });
 
   const approveRentalRequest = async (slotId: string) => {
     // Find the request data
