@@ -14,11 +14,12 @@ export const AdminTenants = () => {
   const [requestEditForm, setRequestEditForm] = useState<{
     rentalMode: string; rentalPrice: number; date: string; startTime: string; endTime: string;
   }>({ rentalMode: "turno", rentalPrice: 0, date: "", startTime: "", endTime: "" });
+  const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved">("all");
   // Editing existing blocked slots
   const [editingSlot, setEditingSlot] = useState<string | null>(null);
   const [slotEditForm, setSlotEditForm] = useState<{
-    date: string; startTime: string; endTime: string; rentalPrice: number;
-  }>({ date: "", startTime: "", endTime: "", rentalPrice: 0 });
+    date: string; startTime: string; endTime: string; rentalPrice: number; rentalMode: string;
+  }>({ date: "", startTime: "", endTime: "", rentalPrice: 0, rentalMode: "turno" });
   const [form, setForm] = useState({
     firstName: "", lastName: "", cov: "", email: "", phone: "", cedula: "",
     rentalMode: "turno" as "turno" | "percent", rentalPrice: 0,
@@ -199,6 +200,7 @@ export const AdminTenants = () => {
       startTime: sl.startTime || "",
       endTime: sl.endTime || "",
       rentalPrice: sl.rentalPrice || 0,
+      rentalMode: sl.rentalMode || "turno",
     });
   };
 
@@ -208,6 +210,7 @@ export const AdminTenants = () => {
       startTime: slotEditForm.startTime,
       endTime: slotEditForm.endTime,
       rentalPrice: slotEditForm.rentalPrice,
+      rentalMode: slotEditForm.rentalMode,
     });
     toast.success("Horario actualizado");
     setEditingSlot(null);
@@ -286,20 +289,47 @@ export const AdminTenants = () => {
     );
   };
 
+  const pendingCount = rentalRequests.filter(r => r.status === 'pending_review').length;
+  const confirmedCount = rentalRequests.filter(r => r.status === 'approved').length;
+  const filteredRequests = rentalRequests.filter(r => {
+    if (filterStatus === "pending") return r.status === 'pending_review';
+    if (filterStatus === "approved") return r.status === 'approved';
+    return true;
+  }).sort((a, b) => {
+    if (a.status === 'pending_review' && b.status !== 'pending_review') return -1;
+    if (a.status !== 'pending_review' && b.status === 'pending_review') return 1;
+    return a.date.localeCompare(b.date);
+  });
+
   return (
     <div className="space-y-6">
       {/* Rental Requests Section — Always visible */}
       <div className="space-y-3">
         <h3 className="font-display font-semibold text-lg flex items-center gap-2">
-          <Clock className="w-5 h-5 text-orange-400" /> Solicitudes de Alquiler
-          {rentalRequests.filter(r => r.status === 'pending_review').length > 0 && (
-            <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">{rentalRequests.filter(r => r.status === 'pending_review').length} pendiente(s)</span>
+          <Clock className="w-5 h-5 text-orange-400" /> Gestión de Alquileres
+          {pendingCount > 0 && (
+            <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">{pendingCount} pendiente(s)</span>
           )}
+          <span className="text-xs text-muted-foreground font-normal ml-1">({rentalRequests.length} total)</span>
         </h3>
-        {rentalRequests.length === 0 ? (
-          <p className="text-muted-foreground text-sm text-center py-4">No hay solicitudes de alquiler</p>
+
+        {/* Filter tabs */}
+        <div className="flex gap-2">
+          <button onClick={() => setFilterStatus("all")} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${filterStatus === "all" ? "bg-gold text-gold-foreground border-gold" : "bg-card border-border hover:border-gold/50"}`}>
+            Todos ({rentalRequests.length})
+          </button>
+          <button onClick={() => setFilterStatus("pending")} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${filterStatus === "pending" ? "bg-orange-500 text-white border-orange-500" : "bg-card border-border hover:border-orange-500/50"}`}>
+            ⏳ Pendientes ({pendingCount})
+          </button>
+          <button onClick={() => setFilterStatus("approved")} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${filterStatus === "approved" ? "bg-clinic-green text-white border-clinic-green" : "bg-card border-border hover:border-clinic-green/50"}`}>
+            ✅ Confirmados ({confirmedCount})
+          </button>
+        </div>
+
+        {filteredRequests.length === 0 ? (
+          <p className="text-muted-foreground text-sm text-center py-4">No hay alquileres {filterStatus === "pending" ? "pendientes" : filterStatus === "approved" ? "confirmados" : ""}</p>
         ) : (
-          rentalRequests.map((req) => {
+          filteredRequests.map((req) => {
             const cleanPhone = req.requesterPhone.replace(/[^0-9+]/g, "");
             const waPhone = cleanPhone.startsWith("+") ? cleanPhone.slice(1) : cleanPhone;
             const isEditing = editingRequest === req.id;
@@ -313,9 +343,10 @@ export const AdminTenants = () => {
                       <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${isPending ? "bg-orange-500/20 text-orange-400" : "bg-clinic-green/20 text-clinic-green"}`}>
                         {isPending ? "⏳ Por confirmar" : "✅ Confirmado"}
                       </span>
+                      {req.tenantId && <span className="text-xs px-2 py-0.5 rounded-full bg-gold/10 text-gold">Inquilino asignado</span>}
                     </div>
-                    <p className="text-sm text-muted-foreground">COV: {req.requesterCov} • Cédula: {req.requesterCedula}</p>
-                    <p className="text-sm text-muted-foreground">{req.requesterEmail} • {req.requesterPhone}</p>
+                    <p className="text-sm text-muted-foreground">COV: {req.requesterCov || "—"} • Cédula: {req.requesterCedula || "—"}</p>
+                    <p className="text-sm text-muted-foreground">{req.requesterEmail || "—"} • {req.requesterPhone || "—"}</p>
                   </div>
                   <div className="flex items-center gap-1 flex-wrap">
                     {req.requesterPhone && (
@@ -335,7 +366,7 @@ export const AdminTenants = () => {
                 {/* Editable details */}
                 {isEditing ? (
                   <div className="bg-muted rounded-lg p-4 space-y-3">
-                    <p className="text-xs font-semibold flex items-center gap-1"><Edit className="w-3 h-3 text-gold" /> Editar detalles</p>
+                    <p className="text-xs font-semibold flex items-center gap-1"><Edit className="w-3 h-3 text-gold" /> Editar detalles del alquiler</p>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-medium mb-1">Modalidad</label>
@@ -377,6 +408,9 @@ export const AdminTenants = () => {
                   </div>
                 ) : (
                   <div className="flex flex-wrap gap-3 text-sm">
+                    <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5 text-gold" />
+                      {req.rentalMode === "turno" ? "Por Turno" : "Por Porcentaje (%)"}
+                    </span>
                     <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 text-gold" />
                       {req.rentalMode === "turno" ? `$${(req.rentalPrice || 0).toFixed(2)} USD` : `${req.rentalPrice}%`}
                     </span>
@@ -516,11 +550,23 @@ export const AdminTenants = () => {
                   <div key={sl.id} className="bg-muted rounded-lg px-3 py-2 text-xs space-y-2">
                     {editingSlot === sl.id ? (
                       <div className="space-y-2">
-                        <div className="grid grid-cols-4 gap-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-xs text-muted-foreground mb-0.5">Modalidad</label>
+                            <select className="w-full bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.rentalMode} onChange={(e) => setSlotEditForm(prev => ({ ...prev, rentalMode: e.target.value }))}>
+                              <option value="turno">Por Turno</option>
+                              <option value="percent">Por Porcentaje (%)</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs text-muted-foreground mb-0.5">{slotEditForm.rentalMode === "turno" ? "Precio USD" : "Porcentaje %"}</label>
+                            <input type="number" step="0.01" className="w-full bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.rentalPrice} onChange={(e) => setSlotEditForm(prev => ({ ...prev, rentalPrice: parseFloat(e.target.value) || 0 }))} />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
                           <input type="date" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.date} onChange={(e) => setSlotEditForm(prev => ({ ...prev, date: e.target.value }))} />
                           <input type="time" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.startTime} onChange={(e) => setSlotEditForm(prev => ({ ...prev, startTime: e.target.value }))} />
                           <input type="time" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.endTime} onChange={(e) => setSlotEditForm(prev => ({ ...prev, endTime: e.target.value }))} />
-                          <input type="number" step="0.01" placeholder="Precio USD" className="bg-card rounded px-2 py-1 text-xs border border-border" value={slotEditForm.rentalPrice} onChange={(e) => setSlotEditForm(prev => ({ ...prev, rentalPrice: parseFloat(e.target.value) || 0 }))} />
                         </div>
                         <div className="flex gap-1">
                           <button onClick={() => handleSaveSlotEdit(sl.id)} className="bg-gold text-gold-foreground px-2 py-1 rounded text-xs font-semibold flex items-center gap-1"><Save className="w-3 h-3" /> Guardar</button>
@@ -529,7 +575,7 @@ export const AdminTenants = () => {
                       </div>
                     ) : (
                       <div className="flex items-center justify-between">
-                        <span>{sl.date} — {sl.allDay ? "Día completo" : `${sl.startTime} - ${sl.endTime}`} {sl.rentalPrice ? `• $${sl.rentalPrice.toFixed(2)}` : ""}</span>
+                        <span>{sl.date} — {sl.allDay ? "Día completo" : `${sl.startTime} - ${sl.endTime}`} • {sl.rentalMode === "percent" ? `${sl.rentalPrice || 0}%` : `$${(sl.rentalPrice || 0).toFixed(2)}`}</span>
                         <div className="flex gap-1">
                           <button onClick={() => startEditSlot(sl)} className="text-gold hover:text-gold/80"><Edit className="w-3 h-3" /></button>
                           <button onClick={async () => { await removeTenantBlockedSlot(t.id, sl.id); toast.success("Bloqueo removido"); }} className="text-destructive hover:text-destructive/80"><Trash2 className="w-3 h-3" /></button>
