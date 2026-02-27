@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin, Phone, Clock, ArrowRight } from "lucide-react";
+import { MapPin, Phone, Clock, ArrowRight, Building2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import RentalRequestForm from "@/components/booking/RentalRequestForm";
 import heroImage from "@/assets/hero-clinic.jpg";
@@ -60,12 +60,20 @@ const Index = () => {
             <p className="text-noir-foreground/70 text-lg md:text-xl mb-10 max-w-xl mx-auto animate-fade-up-delay-2">
               Tu sonrisa merece lo mejor. Atención profesional y personalizada en Puerto La Cruz.
             </p>
-            <Link
-              to="/reservar"
-              className="inline-flex items-center gap-2 bg-gold text-gold-foreground px-8 py-4 rounded-xl text-lg font-semibold hover:opacity-90 transition-opacity animate-fade-up-delay-3"
-            >
-              Agendar Cita <ArrowRight className="w-5 h-5" />
-            </Link>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up-delay-3">
+              <Link
+                to="/reservar"
+                className="inline-flex items-center gap-2 bg-gold text-gold-foreground px-8 py-4 rounded-xl text-lg font-semibold hover:opacity-90 transition-opacity"
+              >
+                Agendar Cita <ArrowRight className="w-5 h-5" />
+              </Link>
+              <button
+                onClick={() => setRentalOpen(true)}
+                className="inline-flex items-center gap-2 border-2 border-gold text-gold px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gold hover:text-gold-foreground transition-all"
+              >
+                Alquiler Profesional <Building2 className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Info Cards */}
