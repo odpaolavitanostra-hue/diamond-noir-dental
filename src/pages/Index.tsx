@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { MapPin, Phone, Clock, ArrowRight, Building2 } from "lucide-react";
+import { MapPin, Phone, Clock, ArrowRight, Building2, CalendarDays } from "lucide-react";
 import { Link } from "react-router-dom";
 import RentalRequestForm from "@/components/booking/RentalRequestForm";
+import BookingDialog from "@/components/booking/BookingDialog";
 import heroImage from "@/assets/hero-clinic.jpg";
 import serviceLimpieza from "@/assets/service-limpieza.jpg";
 import serviceResina from "@/assets/service-resina.jpg";
@@ -13,7 +14,8 @@ import serviceProtesis from "@/assets/service-protesis.jpg";
 
 const Index = () => {
   const [rentalOpen, setRentalOpen] = useState(false);
-
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [bookingTreatment, setBookingTreatment] = useState("");
   return (
     <div className="min-h-screen bg-background font-body">
       {/* Navbar */}
@@ -49,12 +51,12 @@ const Index = () => {
               Tu sonrisa merece lo mejor. Atención profesional y personalizada en Puerto La Cruz.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up-delay-3">
-              <Link
-                to="/reservar"
+              <button
+                onClick={() => { setBookingTreatment(""); setBookingOpen(true); }}
                 className="inline-flex items-center gap-2 bg-gold text-gold-foreground px-8 py-4 rounded-xl text-lg font-semibold hover:opacity-90 transition-opacity"
               >
                 Agendar Cita <ArrowRight className="w-5 h-5" />
-              </Link>
+              </button>
               <button
                 onClick={() => setRentalOpen(true)}
                 className="inline-flex items-center gap-2 bg-gold text-gold-foreground px-8 py-4 rounded-xl text-lg font-semibold hover:opacity-90 transition-opacity"
@@ -106,10 +108,10 @@ const Index = () => {
               { name: "Resina Compuesta", treatment: "Resina Compuesta", img: serviceResina, desc: "Restauraciones estéticas con materiales de última generación." },
               { name: "Revisión", treatment: "Revisión", img: serviceRevision, desc: "Evaluación completa de tu salud bucal con diagnóstico preciso." },
             ].map((s) => (
-              <Link
+              <button
                 key={s.name}
-                to={`/reservar?tratamiento=${encodeURIComponent(s.treatment)}`}
-                className="bg-card rounded-xl overflow-hidden gold-border hover:gold-glow transition-shadow duration-300 group block"
+                onClick={() => { setBookingTreatment(s.treatment); setBookingOpen(true); }}
+                className="bg-card rounded-xl overflow-hidden gold-border hover:gold-glow transition-shadow duration-300 group block text-left"
               >
                 <div className="h-40 overflow-hidden">
                   <img src={s.img} alt={s.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -118,7 +120,7 @@ const Index = () => {
                   <h3 className="font-display text-lg font-semibold mb-2">{s.name}</h3>
                   <p className="text-muted-foreground text-sm">{s.desc}</p>
                 </div>
-              </Link>
+              </button>
             ))}
           </div>
         </div>
@@ -168,6 +170,7 @@ const Index = () => {
       </footer>
 
       <RentalRequestForm open={rentalOpen} onOpenChange={setRentalOpen} />
+      <BookingDialog open={bookingOpen} onOpenChange={setBookingOpen} initialTreatment={bookingTreatment} />
     </div>
   );
 };
