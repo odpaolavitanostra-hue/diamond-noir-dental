@@ -10,6 +10,8 @@ export interface Doctor {
   specialty: string;
   payModel: 'fixed' | 'percent';
   rate: number;
+  phone: string;
+  cov: string;
 }
 
 export interface Patient {
@@ -106,6 +108,7 @@ export function useClinicData() {
       return (data || []).map(d => ({
         id: d.id, email: d.email, name: d.name, specialty: d.specialty,
         payModel: d.pay_model as 'fixed' | 'percent', rate: d.rate,
+        phone: (d as any).phone || '', cov: (d as any).cov || '',
       })) as Doctor[];
     },
   });
@@ -255,7 +258,8 @@ export function useClinicData() {
     await supabase.from("doctors").insert({
       name: doc.name, email: doc.email, specialty: doc.specialty,
       pay_model: doc.payModel, rate: doc.rate,
-    });
+      phone: doc.phone, cov: doc.cov,
+    } as any);
     inv("doctors");
   };
   const updateDoctor = async (id: string, doc: Partial<Doctor>) => {
@@ -265,6 +269,8 @@ export function useClinicData() {
     if (doc.specialty !== undefined) mapped.specialty = doc.specialty;
     if (doc.payModel !== undefined) mapped.pay_model = doc.payModel;
     if (doc.rate !== undefined) mapped.rate = doc.rate;
+    if (doc.phone !== undefined) mapped.phone = doc.phone;
+    if (doc.cov !== undefined) mapped.cov = doc.cov;
     await supabase.from("doctors").update(mapped).eq("id", id);
     inv("doctors");
   };

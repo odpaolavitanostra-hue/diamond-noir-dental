@@ -2,15 +2,15 @@
 import { useState } from "react";
 import { useClinicData, Doctor } from "@/hooks/useClinicData";
 import { supabase } from "@/integrations/supabase/client";
-import { Stethoscope, Plus, Trash2, Edit, Save, X, Key, Mail, MessageCircle } from "lucide-react";
+import { Stethoscope, Plus, Trash2, Edit, Save, X, Key, Mail, Phone } from "lucide-react";
 import { toast } from "sonner";
 
 export const AdminDoctors = () => {
   const { doctors, addDoctor, updateDoctor, deleteDoctor } = useClinicData();
   const [editing, setEditing] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
-  const [form, setForm] = useState<{ name: string; email: string; specialty: string; payModel: 'fixed' | 'percent'; rate: number; password: string }>({
-    name: "", email: "", specialty: "Odontología General", payModel: "percent", rate: 0.4, password: "",
+  const [form, setForm] = useState<{ name: string; email: string; specialty: string; payModel: 'fixed' | 'percent'; rate: number; password: string; phone: string; cov: string }>({
+    name: "", email: "", specialty: "Odontología General", payModel: "percent", rate: 0.4, password: "", phone: "", cov: "",
   });
   const [changingPw, setChangingPw] = useState<string | null>(null);
   const [newPw, setNewPw] = useState("");
@@ -22,16 +22,14 @@ export const AdminDoctors = () => {
     if (!form.password || form.password.length < 6) { toast.error("Contraseña de al menos 6 caracteres"); return; }
 
     try {
-      // Create auth account via edge function
-      const { data: { session } } = await supabase.auth.getSession();
       const res = await supabase.functions.invoke("manage-doctor-auth", {
         body: { action: "create", email: form.email, password: form.password },
       });
       if (res.error || res.data?.error) throw new Error(res.data?.error || "Error al crear cuenta");
 
-      await addDoctor({ name: form.name, email: form.email, specialty: form.specialty, payModel: form.payModel, rate: form.rate });
+      await addDoctor({ name: form.name, email: form.email, specialty: form.specialty, payModel: form.payModel, rate: form.rate, phone: form.phone, cov: form.cov });
       setAdding(false);
-      setForm({ name: "", email: "", specialty: "Odontología General", payModel: "percent", rate: 0.4, password: "" });
+      setForm({ name: "", email: "", specialty: "Odontología General", payModel: "percent", rate: 0.4, password: "", phone: "", cov: "" });
       toast.success("Doctor agregado con cuenta de acceso");
     } catch (err: any) {
       toast.error(err.message || "Error al crear doctor");
@@ -39,7 +37,7 @@ export const AdminDoctors = () => {
   };
 
   const handleUpdate = async (id: string) => {
-    await updateDoctor(id, { name: form.name, email: form.email, specialty: form.specialty, payModel: form.payModel, rate: form.rate });
+    await updateDoctor(id, { name: form.name, email: form.email, specialty: form.specialty, payModel: form.payModel, rate: form.rate, phone: form.phone, cov: form.cov });
     setEditing(null);
     toast.success("Doctor actualizado");
   };
@@ -47,8 +45,6 @@ export const AdminDoctors = () => {
   const handleChangePw = async (doctorEmail: string) => {
     if (!newPw || newPw.length < 6) { toast.error("Contraseña de al menos 6 caracteres"); return; }
     try {
-      // Find the auth user by email - we need to get their user id
-      // We'll use the edge function with the email to update
       const res = await supabase.functions.invoke("manage-doctor-auth", {
         body: { action: "update-password-by-email", email: doctorEmail, password: newPw },
       });
@@ -63,7 +59,7 @@ export const AdminDoctors = () => {
 
   const startEdit = (d: Doctor) => {
     setEditing(d.id);
-    setForm({ name: d.name, email: d.email, specialty: d.specialty, payModel: d.payModel, rate: d.rate, password: "" });
+    setForm({ name: d.name, email: d.email, specialty: d.specialty, payModel: d.payModel, rate: d.rate, password: "", phone: d.phone, cov: d.cov });
   };
 
   return (
@@ -81,9 +77,11 @@ export const AdminDoctors = () => {
         <div className="bg-card rounded-xl p-5 gold-border mb-6 space-y-3">
           <h3 className="font-semibold">{adding ? "Nuevo Doctor" : "Editar Doctor"}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <input className="bg-muted rounded-lg px-3 py-2 text-sm border border-border" placeholder="Nombre" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} maxLength={100} />
+            <input className="bg-muted rounded-lg px-3 py-2 text-sm border border-border" placeholder="Nombre completo" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} maxLength={100} />
             <input className="bg-muted rounded-lg px-3 py-2 text-sm border border-border" placeholder="Email (será su login)" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} maxLength={100} disabled={!!editing} />
             <input className="bg-muted rounded-lg px-3 py-2 text-sm border border-border" placeholder="Especialidad" value={form.specialty} onChange={(e) => setForm((p) => ({ ...p, specialty: e.target.value }))} maxLength={100} />
+            <input className="bg-muted rounded-lg px-3 py-2 text-sm border border-border" placeholder="Teléfono" value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} maxLength={30} />
+            <input className="bg-muted rounded-lg px-3 py-2 text-sm border border-border" placeholder="COV (Colegio de Odontólogos)" value={form.cov} onChange={(e) => setForm((p) => ({ ...p, cov: e.target.value }))} maxLength={30} />
             <select className="bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={form.payModel} onChange={(e) => setForm((p) => ({ ...p, payModel: e.target.value as 'fixed' | 'percent' }))}>
               <option value="percent">Porcentaje (%)</option>
               <option value="fixed">Monto Fijo (USD)</option>
@@ -106,12 +104,14 @@ export const AdminDoctors = () => {
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
                 <p className="font-semibold">{d.name}</p>
-                <p className="text-sm text-muted-foreground">{d.email} • {d.specialty}</p>
+                <p className="text-sm text-muted-foreground">{d.specialty}{d.cov ? ` • COV: ${d.cov}` : ''}</p>
+                <p className="text-sm text-muted-foreground">{d.email}{d.phone ? ` • Tel: ${d.phone}` : ''}</p>
                 <p className="text-xs text-muted-foreground">
                   Pago: {d.payModel === "percent" ? `${(d.rate * 100).toFixed(0)}%` : `$${d.rate.toFixed(2)} USD`}
                 </p>
               </div>
               <div className="flex gap-1 flex-wrap">
+                {d.phone && <a href={`tel:${d.phone}`} className="p-2 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Llamar"><Phone className="w-4 h-4" /></a>}
                 <a href={`mailto:${d.email}`} className="p-2 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Enviar correo"><Mail className="w-4 h-4" /></a>
                 <button onClick={() => setChangingPw(changingPw === d.id ? null : d.id)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Cambiar contraseña"><Key className="w-4 h-4" /></button>
                 <button onClick={() => startEdit(d)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Editar"><Edit className="w-4 h-4" /></button>
