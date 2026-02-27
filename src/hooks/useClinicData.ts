@@ -459,6 +459,17 @@ export function useClinicData() {
     inv("tenant_blocked_slots");
   };
 
+  const updateBlockedSlot = async (slotId: string, updates: { rentalMode?: string; rentalPrice?: number; date?: string; startTime?: string; endTime?: string }) => {
+    const mapped: any = {};
+    if (updates.rentalMode !== undefined) mapped.rental_mode = updates.rentalMode;
+    if (updates.rentalPrice !== undefined) mapped.rental_price = updates.rentalPrice;
+    if (updates.date !== undefined) mapped.date = updates.date;
+    if (updates.startTime !== undefined) mapped.start_time = updates.startTime;
+    if (updates.endTime !== undefined) mapped.end_time = updates.endTime;
+    await supabase.from("tenant_blocked_slots").update(mapped).eq("id", slotId);
+    inv("tenant_blocked_slots");
+  };
+
   // ─── Rental Requests (standalone blocked slots without tenant) ───
   const rentalRequests = blockedSlots
     .filter((slot) => !slot.tenant_id && (slot.status === 'pending_review'))
@@ -538,7 +549,7 @@ export function useClinicData() {
     // Settings
     setTasaBCV,
     // Tenant
-    addTenant, updateTenant, deleteTenant, addTenantBlockedSlot, removeTenantBlockedSlot,
+    addTenant, updateTenant, deleteTenant, addTenantBlockedSlot, removeTenantBlockedSlot, updateBlockedSlot,
     // Rental Requests
     rentalRequests, approveRentalRequest, rejectRentalRequest,
     // State
