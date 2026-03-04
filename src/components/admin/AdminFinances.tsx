@@ -5,6 +5,7 @@ import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import InvoiceGenerator from "./InvoiceGenerator";
 import RecipeGenerator from "./RecipeGenerator";
+import { formatVES } from "@/lib/formatVES";
 
 interface AccountingEntry {
   id: string;
@@ -161,7 +162,7 @@ export const AdminFinances = () => {
             <div className="text-right flex items-center gap-2">
               <div>
                 <p className="font-semibold text-sm">${entry.amountUSD.toFixed(2)}</p>
-                <p className="text-xs text-muted-foreground">Bs. {(entry.amountUSD * tasaBCV).toFixed(2)}</p>
+                <p className="text-xs text-muted-foreground">Bs. {formatVES(entry.amountUSD * tasaBCV)}</p>
               </div>
               <button onClick={() => deleteEntry(type, entry.id)} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20"><Trash2 className="w-3.5 h-3.5" /></button>
             </div>
@@ -215,15 +216,15 @@ export const AdminFinances = () => {
       {activeTab === "resumen" && (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-            <SummaryCard label="Ingresos Pacientes" value={`$${totalIncomeUSD.toFixed(2)}`} sub={`Bs. ${(totalIncomeUSD * tasaBCV).toFixed(2)}`} />
-            <SummaryCard label="Ingresos Alquileres" value={`$${totalRentalIncomeUSD.toFixed(2)}`} sub={`Bs. ${(totalRentalIncomeUSD * tasaBCV).toFixed(2)}`} />
-            <SummaryCard label="Pago Doctores" value={`$${totalDoctorPayUSD.toFixed(2)}`} sub={`Bs. ${(totalDoctorPayUSD * tasaBCV).toFixed(2)}`} />
-            <SummaryCard label="Utilidad" value={`$${totalUtilityUSD.toFixed(2)}`} sub={`Bs. ${(totalUtilityUSD * tasaBCV).toFixed(2)}`} highlight />
+            <SummaryCard label="Ingresos Pacientes" value={`$${totalIncomeUSD.toFixed(2)}`} sub={`Bs. ${formatVES(totalIncomeUSD * tasaBCV)}`} />
+            <SummaryCard label="Ingresos Alquileres" value={`$${totalRentalIncomeUSD.toFixed(2)}`} sub={`Bs. ${formatVES(totalRentalIncomeUSD * tasaBCV)}`} />
+            <SummaryCard label="Pago Doctores" value={`$${totalDoctorPayUSD.toFixed(2)}`} sub={`Bs. ${formatVES(totalDoctorPayUSD * tasaBCV)}`} />
+            <SummaryCard label="Utilidad" value={`$${totalUtilityUSD.toFixed(2)}`} sub={`Bs. ${formatVES(totalUtilityUSD * tasaBCV)}`} highlight />
           </div>
           <div className="grid grid-cols-3 gap-3 mb-6">
-            <SummaryCard label="Materiales" value={`$${totalMaterialsUSD.toFixed(2)}`} sub={`Bs. ${(totalMaterialsUSD * tasaBCV).toFixed(2)}`} />
-            <SummaryCard label="Total Compras" value={`$${totalPurchasesUSD.toFixed(2)}`} sub={`Bs. ${(totalPurchasesUSD * tasaBCV).toFixed(2)}`} />
-            <SummaryCard label="Total Ventas" value={`$${totalSalesUSD.toFixed(2)}`} sub={`Bs. ${(totalSalesUSD * tasaBCV).toFixed(2)}`} />
+            <SummaryCard label="Materiales" value={`$${totalMaterialsUSD.toFixed(2)}`} sub={`Bs. ${formatVES(totalMaterialsUSD * tasaBCV)}`} />
+            <SummaryCard label="Total Compras" value={`$${totalPurchasesUSD.toFixed(2)}`} sub={`Bs. ${formatVES(totalPurchasesUSD * tasaBCV)}`} />
+            <SummaryCard label="Total Ventas" value={`$${totalSalesUSD.toFixed(2)}`} sub={`Bs. ${formatVES(totalSalesUSD * tasaBCV)}`} />
           </div>
 
           {/* Rental income details */}
@@ -260,7 +261,7 @@ export const AdminFinances = () => {
                       <div className="text-right flex items-center gap-2">
                         <div>
                           <p className="font-semibold text-primary">${f.utilityUSD.toFixed(2)} USD</p>
-                          <p className="text-xs text-muted-foreground">Bs. {(f.utilityUSD * f.tasaBCV).toFixed(2)}</p>
+                          <p className="text-xs text-muted-foreground">Bs. {formatVES(f.utilityUSD * f.tasaBCV)}</p>
                         </div>
                         <button onClick={() => { setEditingFinance(editingFinance === f.id ? null : f.id); setEditDoctorPay(f.doctorPayUSD.toString()); }} className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Editar pago doctor"><Edit className="w-3.5 h-3.5" /></button>
                         <button onClick={() => setInvoiceData({ appointment: app, doctor, finance: f })} className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Generar factura"><FileText className="w-3.5 h-3.5" /></button>
@@ -385,7 +386,7 @@ const ReconciliationView = ({ transactions, start, end, tasaBCV }: { transaction
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-sm">${t.amountUSD.toFixed(2)}</p>
-                  <p className="text-xs text-muted-foreground">Bs. {t.amountVES.toFixed(2)}</p>
+                  <p className="text-xs text-muted-foreground">Bs. {formatVES(t.amountVES)}</p>
                   <p className="text-[10px] text-muted-foreground">{t.date}</p>
                 </div>
               </div>

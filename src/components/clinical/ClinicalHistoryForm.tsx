@@ -190,10 +190,21 @@ export default function ClinicalHistoryForm({ patient, open, onOpenChange }: Pro
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <div>
                   <label className="text-xs font-semibold text-muted-foreground">Fecha de Nacimiento</label>
-                  <input type="date" className={inputCls} value={form.birthDate} onChange={e => updateField("birthDate", e.target.value)} />
+                  <input type="date" className={inputCls} value={form.birthDate} onChange={e => {
+                    const bd = e.target.value;
+                    updateField("birthDate", bd);
+                    if (bd && !isLocked) {
+                      const today = new Date();
+                      const birth = new Date(bd + "T00:00:00");
+                      let age = today.getFullYear() - birth.getFullYear();
+                      const m = today.getMonth() - birth.getMonth();
+                      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+                      setForm(prev => ({ ...prev, birthDate: bd, age: Math.max(0, age) }));
+                    }
+                  }} />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground">Edad</label>
+                  <label className="text-xs font-semibold text-muted-foreground">Edad (auto-calculada)</label>
                   <input type="number" className={inputCls} value={form.age || ""} onChange={e => updateField("age", parseInt(e.target.value) || 0)} />
                 </div>
                 <div>

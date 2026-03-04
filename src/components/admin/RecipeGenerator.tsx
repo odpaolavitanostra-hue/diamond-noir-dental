@@ -15,6 +15,7 @@ const CLINIC_INFO = {
   rif: "J-50800151-6",
   address: "C.C Novocentro piso 1, local 1-02, Puerto La Cruz 6023, Anzoátegui",
   phone: "0422-7180013",
+  email: "clinicaodsaludoriente@gmail.com",
 };
 
 export const printRecipe = (doctor: Doctor, patientName: string, patientCedula: string, diagnosis: string, content: string, patientPhone?: string) => {
@@ -59,7 +60,7 @@ export const printRecipe = (doctor: Doctor, patientName: string, patientCedula: 
           <div class="clinic-info">
             RIF: ${CLINIC_INFO.rif}<br>
             ${CLINIC_INFO.address}<br>
-            Tel: ${CLINIC_INFO.phone}
+            Tel: ${CLINIC_INFO.phone} • ${CLINIC_INFO.email}
           </div>
         </div>
       </div>
@@ -94,7 +95,8 @@ export const printRecipe = (doctor: Doctor, patientName: string, patientCedula: 
       </div>
 
       <div class="footer">
-        ${CLINIC_INFO.name} • RIF: ${CLINIC_INFO.rif} • ${CLINIC_INFO.address} • Tel: ${CLINIC_INFO.phone}
+        ${CLINIC_INFO.name} • RIF: ${CLINIC_INFO.rif} • ${CLINIC_INFO.address} • Tel: ${CLINIC_INFO.phone}<br>
+        ${CLINIC_INFO.email}
       </div>
 
       <script>window.onload = () => window.print();</script>

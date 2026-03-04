@@ -1,7 +1,7 @@
-
 import { useClinicData } from "@/hooks/useClinicData";
 import { CalendarDays, Users, Package, DollarSign, TrendingUp, AlertTriangle, Clock, CheckCircle, Building2 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import { formatVES } from "@/lib/formatVES";
 
 interface AdminDashboardProps {
   onNavigate?: (tab: string) => void;
@@ -73,8 +73,8 @@ export const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
           <div className="grid grid-cols-2 gap-3">
             <div><p className="text-xs text-muted-foreground">Ingresos USD</p><p className="text-xl font-bold text-gold">${monthRevenueUSD.toFixed(2)}</p></div>
             <div><p className="text-xs text-muted-foreground">Utilidad USD</p><p className="text-xl font-bold text-clinic-green">${monthUtilityUSD.toFixed(2)}</p></div>
-            <div><p className="text-xs text-muted-foreground">Ingresos Bs.</p><p className="text-lg font-semibold">Bs. {monthRevenueBs.toFixed(2)}</p></div>
-            <div><p className="text-xs text-muted-foreground">Utilidad Bs.</p><p className="text-lg font-semibold">Bs. {monthUtilityBs.toFixed(2)}</p></div>
+            <div><p className="text-xs text-muted-foreground">Ingresos Bs.</p><p className="text-lg font-semibold">Bs. {formatVES(monthRevenueBs)}</p></div>
+            <div><p className="text-xs text-muted-foreground">Utilidad Bs.</p><p className="text-lg font-semibold">Bs. {formatVES(monthUtilityBs)}</p></div>
           </div>
         </div>
 
