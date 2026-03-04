@@ -22,20 +22,14 @@ export const AdminDoctors = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(form.email)) { toast.error("Ingresa un email válido (ej: doctor@clinica.com)"); return; }
     if (!form.password || form.password.length < 6) { toast.error("Contraseña de al menos 6 caracteres"); return; }
-
     try {
-      const res = await supabase.functions.invoke("manage-doctor-auth", {
-        body: { action: "create", email: form.email, password: form.password },
-      });
+      const res = await supabase.functions.invoke("manage-doctor-auth", { body: { action: "create", email: form.email, password: form.password } });
       if (res.error || res.data?.error) throw new Error(res.data?.error || "Error al crear cuenta");
-
       await addDoctor({ name: form.name, email: form.email, specialty: form.specialty, payModel: form.payModel, rate: form.rate, phone: form.phone, cov: form.cov, signatureImg: '', sealImg: '' });
       setAdding(false);
       setForm({ name: "", email: "", specialty: "Odontología General", payModel: "percent", rate: 0.4, password: "", phone: "", cov: "" });
       toast.success("Doctor agregado con cuenta de acceso");
-    } catch (err: any) {
-      toast.error(err.message || "Error al crear doctor");
-    }
+    } catch (err: any) { toast.error(err.message || "Error al crear doctor"); }
   };
 
   const handleUpdate = async (id: string) => {
@@ -47,16 +41,11 @@ export const AdminDoctors = () => {
   const handleChangePw = async (doctorEmail: string) => {
     if (!newPw || newPw.length < 6) { toast.error("Contraseña de al menos 6 caracteres"); return; }
     try {
-      const res = await supabase.functions.invoke("manage-doctor-auth", {
-        body: { action: "update-password-by-email", email: doctorEmail, password: newPw },
-      });
+      const res = await supabase.functions.invoke("manage-doctor-auth", { body: { action: "update-password-by-email", email: doctorEmail, password: newPw } });
       if (res.error || res.data?.error) throw new Error(res.data?.error || "Error");
       toast.success("Contraseña del doctor actualizada");
-      setChangingPw(null);
-      setNewPw("");
-    } catch (err: any) {
-      toast.error(err.message);
-    }
+      setChangingPw(null); setNewPw("");
+    } catch (err: any) { toast.error(err.message); }
   };
 
   const startEdit = (d: Doctor) => {
@@ -68,9 +57,9 @@ export const AdminDoctors = () => {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="font-display text-2xl font-bold flex items-center gap-2">
-          <Stethoscope className="w-6 h-6 text-gold" /> Doctores
+          <Stethoscope className="w-6 h-6 text-primary" /> Doctores
         </h2>
-        <button onClick={() => setAdding(true)} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1">
+        <button onClick={() => setAdding(true)} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1">
           <Plus className="w-4 h-4" /> Agregar
         </button>
       </div>
@@ -94,7 +83,7 @@ export const AdminDoctors = () => {
             )}
           </div>
           <div className="flex gap-2">
-            <button onClick={adding ? handleAdd : () => handleUpdate(editing!)} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Save className="w-4 h-4" /> Guardar</button>
+            <button onClick={adding ? handleAdd : () => handleUpdate(editing!)} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Save className="w-4 h-4" /> Guardar</button>
             <button onClick={() => { setAdding(false); setEditing(null); }} className="bg-muted text-foreground px-4 py-2 rounded-lg text-sm flex items-center gap-1"><X className="w-4 h-4" /> Cancelar</button>
           </div>
         </div>
@@ -108,23 +97,21 @@ export const AdminDoctors = () => {
                 <p className="font-semibold">{d.name}</p>
                 <p className="text-sm text-muted-foreground">{d.specialty}{d.cov ? ` • COV: ${d.cov}` : ''}</p>
                 <p className="text-sm text-muted-foreground">{d.email}{d.phone ? ` • Tel: ${d.phone}` : ''}</p>
-                <p className="text-xs text-muted-foreground">
-                  Pago: {d.payModel === "percent" ? `${(d.rate * 100).toFixed(0)}%` : `$${d.rate.toFixed(2)} USD`}
-                </p>
+                <p className="text-xs text-muted-foreground">Pago: {d.payModel === "percent" ? `${(d.rate * 100).toFixed(0)}%` : `$${d.rate.toFixed(2)} USD`}</p>
               </div>
               <div className="flex gap-1 flex-wrap">
                 {d.phone && <a href={`tel:${d.phone}`} className="p-2 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Llamar"><Phone className="w-4 h-4" /></a>}
                 <a href={`mailto:${d.email}`} className="p-2 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Enviar correo"><Mail className="w-4 h-4" /></a>
-                <button onClick={() => setChangingPw(changingPw === d.id ? null : d.id)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Cambiar contraseña"><Key className="w-4 h-4" /></button>
-                <button onClick={() => setExpandedProfile(expandedProfile === d.id ? null : d.id)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Firma y Sello">{expandedProfile === d.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}</button>
-                <button onClick={() => startEdit(d)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Editar"><Edit className="w-4 h-4" /></button>
+                <button onClick={() => setChangingPw(changingPw === d.id ? null : d.id)} className="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Cambiar contraseña"><Key className="w-4 h-4" /></button>
+                <button onClick={() => setExpandedProfile(expandedProfile === d.id ? null : d.id)} className="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Firma y Sello">{expandedProfile === d.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}</button>
+                <button onClick={() => startEdit(d)} className="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Editar"><Edit className="w-4 h-4" /></button>
                 <button onClick={async () => { await deleteDoctor(d.id); toast.info("Doctor eliminado"); }} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Eliminar"><Trash2 className="w-4 h-4" /></button>
               </div>
             </div>
             {changingPw === d.id && (
               <div className="flex gap-2 items-center">
                 <input type="password" placeholder="Nueva contraseña" className="bg-muted rounded-lg px-3 py-2 text-sm border border-border flex-1" value={newPw} onChange={(e) => setNewPw(e.target.value)} minLength={6} />
-                <button onClick={() => handleChangePw(d.email)} className="bg-gold text-gold-foreground px-3 py-2 rounded-lg text-xs font-semibold">Actualizar</button>
+                <button onClick={() => handleChangePw(d.email)} className="bg-primary text-primary-foreground px-3 py-2 rounded-lg text-xs font-semibold">Actualizar</button>
               </div>
             )}
             {expandedProfile === d.id && (

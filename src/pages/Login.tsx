@@ -21,30 +21,22 @@ const Login = () => {
     setLoading(true);
     try {
       await signIn(email, password);
-      
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
         const isAdmin = roles?.some(r => r.role === "admin");
-        if (isAdmin) {
-          toast.success("Bienvenido, Administrador");
-          navigate("/admin");
-        } else {
-          toast.success("Bienvenido, Doctor");
-          navigate("/doctor");
-        }
+        if (isAdmin) { toast.success("Bienvenido, Administrador"); navigate("/admin"); }
+        else { toast.success("Bienvenido, Doctor"); navigate("/doctor"); }
       }
     } catch (err: any) {
       toast.error(err.message || "Error de autenticación");
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   return (
     <div className="min-h-screen noir-gradient flex items-center justify-center px-4 font-body">
       <div className="w-full max-w-sm">
-        <Link to="/" className="inline-flex items-center gap-2 text-noir-foreground/60 hover:text-gold mb-8 transition-colors">
+        <Link to="/" className="inline-flex items-center gap-2 text-noir-foreground/60 hover:text-primary mb-8 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Volver
         </Link>
 
@@ -54,39 +46,14 @@ const Login = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-noir-foreground/70 text-sm mb-1">Email</label>
-            <input
-              type="email"
-              className="w-full bg-noir-light text-noir-foreground rounded-lg px-4 py-3 text-sm border border-noir-light focus:border-gold focus:outline-none"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              maxLength={100}
-              placeholder="correo@clinica.com"
-            />
+            <input type="email" className="w-full bg-noir-light text-noir-foreground rounded-lg px-4 py-3 text-sm border border-noir-light focus:border-primary focus:outline-none" value={email} onChange={(e) => setEmail(e.target.value)} required maxLength={100} placeholder="correo@clinica.com" />
           </div>
           <div>
             <label className="block text-noir-foreground/70 text-sm mb-1">Contraseña</label>
-            <input
-              type="password"
-              className="w-full bg-noir-light text-noir-foreground rounded-lg px-4 py-3 text-sm border border-noir-light focus:border-gold focus:outline-none"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              maxLength={50}
-            />
+            <input type="password" className="w-full bg-noir-light text-noir-foreground rounded-lg px-4 py-3 text-sm border border-noir-light focus:border-primary focus:outline-none" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} maxLength={50} />
           </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gold text-gold-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {loading ? "Cargando..." : (
-              <>
-                <LogIn className="w-4 h-4" />
-                Ingresar
-              </>
-            )}
+          <button type="submit" disabled={loading} className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2">
+            {loading ? "Cargando..." : (<><LogIn className="w-4 h-4" />Ingresar</>)}
           </button>
         </form>
       </div>

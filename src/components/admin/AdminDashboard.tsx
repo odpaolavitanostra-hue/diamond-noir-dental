@@ -8,7 +8,7 @@ interface AdminDashboardProps {
 }
 
 const COLORS = [
-  "hsl(var(--gold))",
+  "hsl(var(--primary))",
   "hsl(var(--clinic-green))",
   "#3b82f6",
   "#f59e0b",
@@ -36,16 +36,12 @@ export const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
   const monthRevenueBs = monthFinances.reduce((s, f) => s + f.treatmentPriceUSD * f.tasaBCV, 0);
   const monthUtilityBs = monthFinances.reduce((s, f) => s + f.utilityUSD * f.tasaBCV, 0);
 
-  // Pie chart: count services performed (completed appointments by treatment + rentals)
   const treatmentCounts: Record<string, number> = {};
   completedApps.forEach((a) => {
     treatmentCounts[a.treatment] = (treatmentCounts[a.treatment] || 0) + 1;
   });
-  // Count approved rentals
   const totalRentals = tenants.reduce((sum, t) => sum + t.blockedSlots.filter(s => s.status === "approved").length, 0);
-  if (totalRentals > 0) {
-    treatmentCounts["Alquileres"] = totalRentals;
-  }
+  if (totalRentals > 0) { treatmentCounts["Alquileres"] = totalRentals; }
 
   const pieData = Object.entries(treatmentCounts)
     .map(([name, value]) => ({ name, value }))
@@ -56,7 +52,7 @@ export const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
   return (
     <div className="space-y-6">
       <h2 className="font-display text-2xl font-bold flex items-center gap-2">
-        <TrendingUp className="w-6 h-6 text-gold" /> Dashboard
+        <TrendingUp className="w-6 h-6 text-primary" /> Dashboard
       </h2>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -70,9 +66,9 @@ export const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-card rounded-xl p-5 gold-border space-y-3 cursor-pointer hover:ring-1 hover:ring-gold/40 transition-all" onClick={() => nav("finances")}>
+        <div className="bg-card rounded-xl p-5 gold-border space-y-3 cursor-pointer hover:ring-1 hover:ring-primary/40 transition-all" onClick={() => nav("finances")}>
           <h3 className="font-display font-semibold flex items-center gap-2">
-            <DollarSign className="w-5 h-5 text-gold" /> Finanzas del Mes
+            <DollarSign className="w-5 h-5 text-primary" /> Finanzas del Mes
           </h3>
           <div className="grid grid-cols-2 gap-3">
             <div><p className="text-xs text-muted-foreground">Ingresos USD</p><p className="text-xl font-bold text-gold">${monthRevenueUSD.toFixed(2)}</p></div>
@@ -82,10 +78,9 @@ export const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
           </div>
         </div>
 
-        {/* Pie Chart - Services performed */}
         <div className="bg-card rounded-xl p-5 gold-border space-y-3">
           <h3 className="font-display font-semibold flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-gold" /> Servicios Realizados
+            <TrendingUp className="w-5 h-5 text-primary" /> Servicios Realizados
           </h3>
           {pieData.length === 0 ? (
             <p className="text-muted-foreground text-sm text-center py-8">No hay servicios registrados aún</p>
@@ -120,7 +115,7 @@ export const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
       )}
 
       <div className="bg-card rounded-xl p-5 gold-border space-y-3">
-        <h3 className="font-display font-semibold flex items-center gap-2"><CalendarDays className="w-5 h-5 text-gold" /> Citas de Hoy</h3>
+        <h3 className="font-display font-semibold flex items-center gap-2"><CalendarDays className="w-5 h-5 text-primary" /> Citas de Hoy</h3>
         {todayApps.length === 0 ? (
           <p className="text-muted-foreground text-sm text-center py-4">No hay citas programadas para hoy</p>
         ) : (
@@ -148,8 +143,8 @@ export const AdminDashboard = ({ onNavigate }: AdminDashboardProps) => {
 };
 
 const StatCard = ({ icon, label, value, accent, onClick }: { icon: React.ReactNode; label: string; value: number; accent?: boolean; onClick?: () => void }) => (
-  <div className={`bg-card rounded-xl p-4 gold-border cursor-pointer hover:ring-1 hover:ring-gold/40 transition-all ${accent ? "ring-1 ring-gold/30" : ""}`} onClick={onClick}>
-    <div className="flex items-center gap-2 mb-2 text-gold">{icon}</div>
+  <div className={`bg-card rounded-xl p-4 gold-border cursor-pointer hover:ring-1 hover:ring-primary/40 transition-all ${accent ? "ring-1 ring-primary/30" : ""}`} onClick={onClick}>
+    <div className="flex items-center gap-2 mb-2 text-primary">{icon}</div>
     <p className="text-2xl font-bold">{value}</p>
     <p className="text-xs text-muted-foreground">{label}</p>
   </div>
