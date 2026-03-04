@@ -326,6 +326,54 @@ export type Database = {
         }
         Relationships: []
       }
+      leads: {
+        Row: {
+          cedula: string
+          contact_history: Json
+          created_at: string
+          email: string
+          id: string
+          interest: string
+          is_high_value: boolean
+          name: string
+          notes: string
+          phone: string
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          cedula?: string
+          contact_history?: Json
+          created_at?: string
+          email?: string
+          id?: string
+          interest?: string
+          is_high_value?: boolean
+          name: string
+          notes?: string
+          phone?: string
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          cedula?: string
+          contact_history?: Json
+          created_at?: string
+          email?: string
+          id?: string
+          interest?: string
+          is_high_value?: boolean
+          name?: string
+          notes?: string
+          phone?: string
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       patients: {
         Row: {
           cedula: string
