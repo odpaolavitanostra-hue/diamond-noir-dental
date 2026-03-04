@@ -228,7 +228,34 @@ export default function ClinicalHistoryForm({ patient, open, onOpenChange }: Pro
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-muted-foreground">Ocupación</label>
-                  <input className={inputCls} value={form.occupation} onChange={e => updateField("occupation", e.target.value)} maxLength={100} />
+                  <select className={inputCls} value={form.occupation} onChange={e => updateField("occupation", e.target.value)}>
+                    <option value="">Seleccionar</option>
+                    <option value="Estudiante">Estudiante</option>
+                    <option value="Ama de Casa">Ama de Casa</option>
+                    <option value="Comerciante">Comerciante</option>
+                    <option value="Cocinero/a">Cocinero/a</option>
+                    <option value="Ingeniero/a">Ingeniero/a</option>
+                    <option value="Contador/a">Contador/a</option>
+                    <option value="Administrador/a">Administrador/a</option>
+                    <option value="Abogado/a">Abogado/a</option>
+                    <option value="Médico/a">Médico/a</option>
+                    <option value="Enfermero/a">Enfermero/a</option>
+                    <option value="Profesor/a">Profesor/a</option>
+                    <option value="Arquitecto/a">Arquitecto/a</option>
+                    <option value="Electricista">Electricista</option>
+                    <option value="Mecánico/a">Mecánico/a</option>
+                    <option value="Albañil">Albañil</option>
+                    <option value="Conductor/a">Conductor/a</option>
+                    <option value="Obrero/a">Obrero/a</option>
+                    <option value="Vendedor/a">Vendedor/a</option>
+                    <option value="Secretario/a">Secretario/a</option>
+                    <option value="Técnico/a">Técnico/a</option>
+                    <option value="Policía">Policía</option>
+                    <option value="Militar">Militar</option>
+                    <option value="Jubilado/a">Jubilado/a</option>
+                    <option value="Desempleado/a">Desempleado/a</option>
+                    <option value="Otro">Otro</option>
+                  </select>
                 </div>
                 <div className="col-span-2">
                   <label className="text-xs font-semibold text-muted-foreground">Dirección</label>
@@ -317,7 +344,14 @@ export default function ClinicalHistoryForm({ patient, open, onOpenChange }: Pro
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-muted-foreground">Sangrado</label>
-                  <input className={inputCls} value={form.bleeding} onChange={e => updateField("bleeding", e.target.value)} maxLength={200} />
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => updateField("bleeding", "Sí")}
+                      className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${form.bleeding === "Sí" ? "bg-destructive text-destructive-foreground" : "bg-muted text-muted-foreground"}`}
+                      disabled={isLocked}>Sí</button>
+                    <button type="button" onClick={() => updateField("bleeding", "No")}
+                      className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${form.bleeding === "No" ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground"}`}
+                      disabled={isLocked}>No</button>
+                  </div>
                 </div>
                 <div className="flex gap-4 flex-wrap">
                   <label className="flex items-center gap-2 text-sm">

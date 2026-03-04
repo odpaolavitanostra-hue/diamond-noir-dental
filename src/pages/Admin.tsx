@@ -18,12 +18,12 @@ import { useClinicData } from "@/hooks/useClinicData";
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "leads", label: "Prospectos", icon: UserCheck },
   { id: "calendar", label: "Agenda", icon: CalendarDays },
-  { id: "doctors", label: "Doctores", icon: Stethoscope },
   { id: "patients", label: "Pacientes", icon: Users },
   { id: "rentals", label: "Alquileres", icon: Building2 },
+  { id: "doctors", label: "Doctores", icon: Stethoscope },
   { id: "inventory", label: "Inventario", icon: Package },
+  { id: "leads", label: "Prospectos", icon: UserCheck },
   { id: "finances", label: "Finanzas", icon: DollarSign },
   { id: "settings", label: "Config", icon: Settings },
 ];

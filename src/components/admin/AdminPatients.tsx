@@ -246,22 +246,6 @@ const PatientCard = ({ patient: p, appointments, doctors, onEdit, onDelete, onPh
         </div>
       )}
 
-      <div className="space-y-2">
-        <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1"><FileText className="w-3 h-3" /> Historia Clínica</p>
-        {p.clinicalHistoryUrl ? (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <button onClick={onTogglePdf} className="text-xs text-accent hover:underline">{viewingPdf ? "Cerrar visor" : "Ver PDF"}</button>
-              <a href={p.clinicalHistoryUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:underline">Abrir en nueva pestaña</a>
-            </div>
-            {viewingPdf && (<iframe src={p.clinicalHistoryUrl} className="w-full h-96 rounded-lg border border-border" title={`HC ${p.name}`} />)}
-          </div>
-        ) : (<p className="text-xs text-muted-foreground">Sin historia clínica</p>)}
-        <label className={`inline-flex items-center gap-1 text-xs text-accent cursor-pointer hover:underline ${uploadingPdf ? 'opacity-50' : ''}`}>
-          <Upload className="w-3 h-3" /> {uploadingPdf ? "Subiendo..." : "Subir PDF"}
-          <input type="file" accept=".pdf" className="hidden" disabled={uploadingPdf} onChange={(e) => { if (e.target.files?.[0]) onPdfUpload(p.id, e.target.files[0]); }} />
-        </label>
-      </div>
 
       {viewingPhotos && (
         <div className="bg-muted rounded-lg p-3 space-y-3">
