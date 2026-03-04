@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -43,7 +42,6 @@ const Admin = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
 
-  // Track previous counts for detecting new items
   const prevCounts = useRef<{ appointments: number; patients: number; pendingRentals: number }>({
     appointments: 0, patients: 0, pendingRentals: 0,
   });
@@ -55,7 +53,6 @@ const Admin = () => {
     }
   }, [loading, user, navigate]);
 
-  // Detect new items and create notifications
   useEffect(() => {
     const currentAppCount = appointments.length;
     const currentPatientCount = patients.length;
@@ -71,32 +68,17 @@ const Admin = () => {
 
     if (currentAppCount > prevCounts.current.appointments) {
       const diff = currentAppCount - prevCounts.current.appointments;
-      newNotifs.push({
-        id: `app-${Date.now()}`,
-        type: "appointment",
-        message: `📅 ${diff} nueva(s) cita(s) agendada(s)`,
-        tab: "calendar",
-      });
+      newNotifs.push({ id: `app-${Date.now()}`, type: "appointment", message: `📅 ${diff} nueva(s) cita(s) agendada(s)`, tab: "calendar" });
     }
 
     if (currentPatientCount > prevCounts.current.patients) {
       const diff = currentPatientCount - prevCounts.current.patients;
-      newNotifs.push({
-        id: `pat-${Date.now()}`,
-        type: "patient",
-        message: `👤 ${diff} nuevo(s) paciente(s) registrado(s)`,
-        tab: "patients",
-      });
+      newNotifs.push({ id: `pat-${Date.now()}`, type: "patient", message: `👤 ${diff} nuevo(s) paciente(s) registrado(s)`, tab: "patients" });
     }
 
     if (currentPendingRentals > prevCounts.current.pendingRentals) {
       const diff = currentPendingRentals - prevCounts.current.pendingRentals;
-      newNotifs.push({
-        id: `ten-${Date.now()}`,
-        type: "tenant",
-        message: `🏢 ${diff} nueva(s) solicitud(es) de alquiler`,
-        tab: "rentals",
-      });
+      newNotifs.push({ id: `ten-${Date.now()}`, type: "tenant", message: `🏢 ${diff} nueva(s) solicitud(es) de alquiler`, tab: "rentals" });
     }
 
     if (newNotifs.length > 0) {
@@ -106,10 +88,7 @@ const Admin = () => {
     prevCounts.current = { appointments: currentAppCount, patients: currentPatientCount, pendingRentals: currentPendingRentals };
   }, [appointments.length, patients.length, rentalRequests]);
 
-  const handleLogout = async () => {
-    await signOut();
-    navigate("/");
-  };
+  const handleLogout = async () => { await signOut(); navigate("/"); };
 
   const handleNotificationClick = (notif: Notification) => {
     setActiveTab(notif.tab);
@@ -117,10 +96,7 @@ const Admin = () => {
     setShowNotifications(false);
   };
 
-  const clearNotifications = () => {
-    setNotifications([]);
-    setShowNotifications(false);
-  };
+  const clearNotifications = () => { setNotifications([]); setShowNotifications(false); };
 
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><p className="text-muted-foreground">Cargando...</p></div>;
   if (!user) return null;
@@ -143,30 +119,20 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background font-body">
-      {/* Top bar */}
       <header className="noir-gradient sticky top-0 z-50">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <button
-              className="md:hidden text-noir-foreground"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
+            <button className="md:hidden text-noir-foreground" onClick={() => setMenuOpen(!menuOpen)}>
               {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
             <h1 className="font-display text-lg text-gold font-semibold">Admin COSO</h1>
           </div>
           <div className="flex items-center gap-3">
-            {/* Notification bell */}
             <div className="relative">
-              <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="relative text-noir-foreground/60 hover:text-gold transition-colors"
-              >
+              <button onClick={() => setShowNotifications(!showNotifications)} className="relative text-noir-foreground/60 hover:text-primary transition-colors">
                 <Bell className="w-5 h-5" />
                 {notifications.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center animate-pulse font-bold">
-                    {notifications.length}
-                  </span>
+                  <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center animate-pulse font-bold">{notifications.length}</span>
                 )}
               </button>
               {showNotifications && (
@@ -182,11 +148,7 @@ const Admin = () => {
                   ) : (
                     <div className="max-h-60 overflow-y-auto">
                       {notifications.map((notif) => (
-                        <button
-                          key={notif.id}
-                          onClick={() => handleNotificationClick(notif)}
-                          className="w-full text-left px-4 py-3 text-sm hover:bg-muted transition-colors border-b border-border/50 last:border-0"
-                        >
+                        <button key={notif.id} onClick={() => handleNotificationClick(notif)} className="w-full text-left px-4 py-3 text-sm hover:bg-muted transition-colors border-b border-border/50 last:border-0">
                           {notif.message}
                         </button>
                       ))}
@@ -195,16 +157,12 @@ const Admin = () => {
                 </div>
               )}
             </div>
-            <button
-              onClick={handleLogout}
-              className="text-noir-foreground/60 hover:text-gold transition-colors flex items-center gap-1 text-sm"
-            >
+            <button onClick={handleLogout} className="text-noir-foreground/60 hover:text-primary transition-colors flex items-center gap-1 text-sm">
               <LogOut className="w-4 h-4" /> Salir
             </button>
           </div>
         </div>
 
-        {/* Desktop tabs */}
         <div className="hidden md:flex gap-1 px-4 pb-2 overflow-x-auto">
           {tabs.map((tab) => {
             const rentalBadge = tab.id === "rentals" && pendingRentalCount > 0;
@@ -214,7 +172,7 @@ const Admin = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
                   activeTab === tab.id
-                    ? "bg-gold text-gold-foreground"
+                    ? "bg-primary text-primary-foreground"
                     : "text-noir-foreground/60 hover:text-noir-foreground"
                 }`}
               >
@@ -227,7 +185,6 @@ const Admin = () => {
         </div>
       </header>
 
-      {/* Mobile menu */}
       {menuOpen && (
         <div className="md:hidden fixed inset-0 z-40 bg-noir/95 pt-16">
           <div className="flex flex-col gap-2 p-4">
@@ -239,7 +196,7 @@ const Admin = () => {
                   onClick={() => { setActiveTab(tab.id); setMenuOpen(false); }}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg text-left text-base font-medium transition-all ${
                     activeTab === tab.id
-                      ? "bg-gold text-gold-foreground"
+                      ? "bg-primary text-primary-foreground"
                       : "text-noir-foreground/70 hover:text-noir-foreground"
                   }`}
                 >
@@ -253,7 +210,6 @@ const Admin = () => {
         </div>
       )}
 
-      {/* Content */}
       <main className="container mx-auto px-4 py-6 max-w-6xl">
         {renderContent()}
       </main>

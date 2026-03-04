@@ -23,16 +23,11 @@ export const AdminPatients = () => {
   const handleAdd = async () => {
     if (!form.name) { toast.error("Nombre requerido"); return; }
     await addPatient({ ...form, photos: [], clinicalHistoryUrl: "" });
-    setAdding(false);
-    setForm({ name: "", cedula: "", phone: "", email: "", notes: "" });
+    setAdding(false); setForm({ name: "", cedula: "", phone: "", email: "", notes: "" });
     toast.success("Paciente agregado");
   };
 
-  const handleUpdate = async (id: string) => {
-    await updatePatient(id, form);
-    setEditing(null);
-    toast.success("Paciente actualizado");
-  };
+  const handleUpdate = async (id: string) => { await updatePatient(id, form); setEditing(null); toast.success("Paciente actualizado"); };
 
   const startEdit = (p: Patient) => {
     setEditing(p.id);
@@ -46,10 +41,7 @@ export const AdminPatients = () => {
     if (error) { toast.error("Error al subir foto"); setUploadingPhoto(false); return; }
     const { data: urlData } = supabase.storage.from("patient-files").getPublicUrl(path);
     const patient = patients.find(p => p.id === patientId);
-    if (patient) {
-      await updatePatient(patientId, { photos: [...patient.photos, urlData.publicUrl] });
-      toast.success("Foto agregada");
-    }
+    if (patient) { await updatePatient(patientId, { photos: [...patient.photos, urlData.publicUrl] }); toast.success("Foto agregada"); }
     setUploadingPhoto(false);
   };
 
@@ -60,27 +52,21 @@ export const AdminPatients = () => {
     if (error) { toast.error("Error al subir PDF"); setUploadingPdf(false); return; }
     const { data: urlData } = supabase.storage.from("patient-files").getPublicUrl(path);
     await updatePatient(patientId, { clinicalHistoryUrl: urlData.publicUrl });
-    toast.success("Historia clínica actualizada");
-    setUploadingPdf(false);
+    toast.success("Historia clínica actualizada"); setUploadingPdf(false);
   };
 
   const removePhoto = async (patientId: string, index: number) => {
     const patient = patients.find((p) => p.id === patientId);
-    if (patient) {
-      const updated = [...(patient.photos || [])];
-      updated.splice(index, 1);
-      await updatePatient(patientId, { photos: updated });
-      toast.info("Foto eliminada");
-    }
+    if (patient) { const updated = [...(patient.photos || [])]; updated.splice(index, 1); await updatePatient(patientId, { photos: updated }); toast.info("Foto eliminada"); }
   };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="font-display text-2xl font-bold flex items-center gap-2">
-          <Users className="w-6 h-6 text-gold" /> Pacientes
+          <Users className="w-6 h-6 text-primary" /> Pacientes
         </h2>
-        <button onClick={() => setAdding(true)} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1">
+        <button onClick={() => setAdding(true)} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1">
           <Plus className="w-4 h-4" /> Agregar
         </button>
       </div>
@@ -96,13 +82,12 @@ export const AdminPatients = () => {
           </div>
           <textarea className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border resize-none" placeholder="Notas" rows={2} value={form.notes} onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))} maxLength={500} />
           <div className="flex gap-2">
-            <button onClick={adding ? handleAdd : () => handleUpdate(editing!)} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Save className="w-4 h-4" /> Guardar</button>
+            <button onClick={adding ? handleAdd : () => handleUpdate(editing!)} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Save className="w-4 h-4" /> Guardar</button>
             <button onClick={() => { setAdding(false); setEditing(null); }} className="bg-muted text-foreground px-4 py-2 rounded-lg text-sm flex items-center gap-1"><X className="w-4 h-4" /> Cancelar</button>
           </div>
         </div>
       )}
 
-      {/* Waiting patients section */}
       {waitingAppointments.length > 0 && (
         <div className="bg-card rounded-xl p-5 gold-border mb-6 space-y-3">
           <h3 className="font-display font-semibold flex items-center gap-2">
@@ -124,13 +109,9 @@ export const AdminPatients = () => {
                       {app.notes && <p className="text-xs text-orange-500 mt-1">📝 {app.notes}</p>}
                     </div>
                     <div className="flex gap-1 flex-wrap">
-                      {app.patientPhone && (
-                        <a href={`https://wa.me/${waPhone}`} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20" title="WhatsApp"><MessageCircle className="w-4 h-4" /></a>
-                      )}
-                      {app.patientEmail && (
-                        <a href={`mailto:${app.patientEmail}`} className="p-1.5 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Correo"><Mail className="w-4 h-4" /></a>
-                      )}
-                      <button onClick={() => { setEditingDoctorId(editingDoctorId === app.id ? null : app.id); setSelectedDoctorId(app.doctorId || doctors[0]?.id || ""); }} className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Asignar doctor"><UserCog className="w-4 h-4" /></button>
+                      {app.patientPhone && (<a href={`https://wa.me/${waPhone}`} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20" title="WhatsApp"><MessageCircle className="w-4 h-4" /></a>)}
+                      {app.patientEmail && (<a href={`mailto:${app.patientEmail}`} className="p-1.5 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Correo"><Mail className="w-4 h-4" /></a>)}
+                      <button onClick={() => { setEditingDoctorId(editingDoctorId === app.id ? null : app.id); setSelectedDoctorId(app.doctorId || doctors[0]?.id || ""); }} className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Asignar doctor"><UserCog className="w-4 h-4" /></button>
                       <button onClick={async () => { await updateAppointment(app.id, { status: "pendiente" }); toast.success("✅ Cita aprobada"); }} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Aprobar"><Check className="w-4 h-4" /></button>
                       <button onClick={async () => { await updateAppointment(app.id, { status: "cancelada" }); toast.info("Cita rechazada"); }} className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Rechazar"><X className="w-4 h-4" /></button>
                     </div>
@@ -142,7 +123,7 @@ export const AdminPatients = () => {
                         {doctors.map((d) => <option key={d.id} value={d.id}>{d.name} — {d.specialty}</option>)}
                       </select>
                       <div className="flex gap-2">
-                        <button onClick={async () => { await updateAppointment(app.id, { doctorId: selectedDoctorId }); setEditingDoctorId(null); toast.success("Doctor asignado"); }} className="bg-gold text-gold-foreground px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1"><Save className="w-3 h-3" /> Guardar</button>
+                        <button onClick={async () => { await updateAppointment(app.id, { doctorId: selectedDoctorId }); setEditingDoctorId(null); toast.success("Doctor asignado"); }} className="bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1"><Save className="w-3 h-3" /> Guardar</button>
                         <button onClick={() => setEditingDoctorId(null)} className="bg-muted-foreground/10 text-foreground px-3 py-1.5 rounded-lg text-xs">Cancelar</button>
                       </div>
                     </div>
@@ -171,57 +152,43 @@ export const AdminPatients = () => {
                   {p.phone && (() => {
                     const phoneClean = p.phone.replace(/[^0-9]/g, "");
                     const waPhone = phoneClean.startsWith("58") ? phoneClean : `58${phoneClean}`;
-                    return (
-                      <a href={`https://wa.me/${waPhone}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20" title="WhatsApp"><MessageCircle className="w-4 h-4" /></a>
-                    );
+                    return (<a href={`https://wa.me/${waPhone}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20" title="WhatsApp"><MessageCircle className="w-4 h-4" /></a>);
                   })()}
-                  {p.email && (
-                    <a href={`mailto:${p.email}`} className="p-2 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Correo"><Mail className="w-4 h-4" /></a>
-                  )}
+                  {p.email && (<a href={`mailto:${p.email}`} className="p-2 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" title="Correo"><Mail className="w-4 h-4" /></a>)}
                   <button onClick={() => setClinicalHistoryPatient(p)} className="p-2 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Historia Clínica"><ClipboardList className="w-4 h-4" /></button>
-                  <button onClick={() => setViewingPhotos(viewingPhotos === p.id ? null : p.id)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Fotos"><Camera className="w-4 h-4" /></button>
-                  <button onClick={() => startEdit(p)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Editar"><Edit className="w-4 h-4" /></button>
+                  <button onClick={() => setViewingPhotos(viewingPhotos === p.id ? null : p.id)} className="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Fotos"><Camera className="w-4 h-4" /></button>
+                  <button onClick={() => startEdit(p)} className="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Editar"><Edit className="w-4 h-4" /></button>
                   <button onClick={async () => { await deletePatient(p.id); toast.info("Paciente eliminado"); }} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Eliminar"><Trash2 className="w-4 h-4" /></button>
                 </div>
               </div>
 
-              {/* Clinical History PDF */}
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1"><FileText className="w-3 h-3" /> Historia Clínica</p>
                 {p.clinicalHistoryUrl ? (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <button onClick={() => setViewingPdf(viewingPdf === p.id ? null : p.id)} className="text-xs text-gold hover:underline">
-                        {viewingPdf === p.id ? "Cerrar visor" : "Ver PDF"}
-                      </button>
+                      <button onClick={() => setViewingPdf(viewingPdf === p.id ? null : p.id)} className="text-xs text-primary hover:underline">{viewingPdf === p.id ? "Cerrar visor" : "Ver PDF"}</button>
                       <a href={p.clinicalHistoryUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:underline">Abrir en nueva pestaña</a>
                     </div>
-                    {viewingPdf === p.id && (
-                      <iframe src={p.clinicalHistoryUrl} className="w-full h-96 rounded-lg border border-border" title={`HC ${p.name}`} />
-                    )}
+                    {viewingPdf === p.id && (<iframe src={p.clinicalHistoryUrl} className="w-full h-96 rounded-lg border border-border" title={`HC ${p.name}`} />)}
                   </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground">Sin historia clínica</p>
-                )}
-                <label className={`inline-flex items-center gap-1 text-xs text-gold cursor-pointer hover:underline ${uploadingPdf ? 'opacity-50' : ''}`}>
+                ) : (<p className="text-xs text-muted-foreground">Sin historia clínica</p>)}
+                <label className={`inline-flex items-center gap-1 text-xs text-primary cursor-pointer hover:underline ${uploadingPdf ? 'opacity-50' : ''}`}>
                   <Upload className="w-3 h-3" /> {uploadingPdf ? "Subiendo..." : "Subir PDF"}
                   <input type="file" accept=".pdf" className="hidden" disabled={uploadingPdf} onChange={(e) => { if (e.target.files?.[0]) handlePdfUpload(p.id, e.target.files[0]); }} />
                 </label>
               </div>
 
-              {/* Photos */}
               {viewingPhotos === p.id && (
                 <div className="bg-muted rounded-lg p-3 space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className="text-sm font-semibold">Fotos del Proceso ({(p.photos || []).length})</h4>
-                    <label className={`bg-gold text-gold-foreground px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer ${uploadingPhoto ? 'opacity-50' : ''}`}>
+                    <label className={`bg-primary text-primary-foreground px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer ${uploadingPhoto ? 'opacity-50' : ''}`}>
                       <Plus className="w-3 h-3" /> {uploadingPhoto ? "Subiendo..." : "Agregar"}
                       <input type="file" accept="image/*" className="hidden" disabled={uploadingPhoto} onChange={(e) => { if (e.target.files?.[0]) handlePhotoUpload(p.id, e.target.files[0]); }} />
                     </label>
                   </div>
-                  {(p.photos || []).length === 0 ? (
-                    <p className="text-xs text-muted-foreground text-center py-4">Sin fotos aún</p>
-                  ) : (
+                  {(p.photos || []).length === 0 ? (<p className="text-xs text-muted-foreground text-center py-4">Sin fotos aún</p>) : (
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                       {(p.photos || []).map((photo, i) => (
                         <div key={i} className="relative group rounded-lg overflow-hidden aspect-square">
@@ -238,11 +205,7 @@ export const AdminPatients = () => {
         )}
       </div>
       {clinicalHistoryPatient && (
-        <ClinicalHistoryForm
-          patient={clinicalHistoryPatient}
-          open={!!clinicalHistoryPatient}
-          onOpenChange={(open) => { if (!open) setClinicalHistoryPatient(null); }}
-        />
+        <ClinicalHistoryForm patient={clinicalHistoryPatient} open={!!clinicalHistoryPatient} onOpenChange={(open) => { if (!open) setClinicalHistoryPatient(null); }} />
       )}
     </div>
   );

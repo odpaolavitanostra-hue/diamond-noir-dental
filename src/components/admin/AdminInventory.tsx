@@ -33,9 +33,9 @@ export const AdminInventory = () => {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="font-display text-2xl font-bold flex items-center gap-2">
-          <Package className="w-6 h-6 text-gold" /> Inventario
+          <Package className="w-6 h-6 text-primary" /> Inventario
         </h2>
-        <button onClick={() => setAdding(true)} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1">
+        <button onClick={() => setAdding(true)} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1">
           <Plus className="w-4 h-4" /> Agregar
         </button>
       </div>
@@ -50,7 +50,7 @@ export const AdminInventory = () => {
             <input type="number" min="0" className="bg-muted rounded-lg px-3 py-2 text-sm border border-border" placeholder="Stock Mínimo" value={form.minStock} onChange={(e) => setForm((p) => ({ ...p, minStock: parseInt(e.target.value) || 0 }))} />
           </div>
           <div className="flex gap-2">
-            <button onClick={adding ? handleAdd : () => handleUpdate(editing!)} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Save className="w-4 h-4" /> Guardar</button>
+            <button onClick={adding ? handleAdd : () => handleUpdate(editing!)} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><Save className="w-4 h-4" /> Guardar</button>
             <button onClick={() => { setAdding(false); setEditing(null); }} className="bg-muted text-foreground px-4 py-2 rounded-lg text-sm flex items-center gap-1"><X className="w-4 h-4" /> Cancelar</button>
           </div>
         </div>
@@ -69,7 +69,7 @@ export const AdminInventory = () => {
               <p className="text-sm text-muted-foreground">Stock: {item.stock} • Mín: {item.minStock} • ${item.priceUSD.toFixed(2)} USD</p>
             </div>
             <div className="flex gap-1">
-              <button onClick={() => startEdit(item)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20"><Edit className="w-4 h-4" /></button>
+              <button onClick={() => startEdit(item)} className="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20"><Edit className="w-4 h-4" /></button>
               <button onClick={async () => { await deleteInventoryItem(item.id); toast.info("Item eliminado"); }} className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20"><Trash2 className="w-4 h-4" /></button>
             </div>
           </div>

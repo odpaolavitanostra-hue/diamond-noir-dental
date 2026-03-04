@@ -36,10 +36,10 @@
 
     --radius: 0.75rem;
 
-    /* JADE PRIMARY (Deep Jade #435A53 lightened for versatility) */
-    --gold: 160 20% 45%;
-    --gold-foreground: 40 30% 97%;
-    --gold-muted: 160 12% 60%;
+    /* ORIGINAL GOLD (#E8C056) — Accent for premium borders, alerts, money highlights */
+    --gold: 43 78% 62%;
+    --gold-foreground: 0 0% 7%;
+    --gold-muted: 43 60% 72%;
 
     /* AMBER ALERT (Original Gold #E8C056 — alerts & warnings ONLY) */
     --amber: 43 72% 55%;
