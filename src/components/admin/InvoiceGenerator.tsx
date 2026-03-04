@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FileText, Download, Printer } from "lucide-react";
 import type { Appointment, Doctor, FinanceRecord } from "@/hooks/useClinicData";
+import { formatVES } from "@/lib/formatVES";
 
 interface InvoiceGeneratorProps {
   open: boolean;
@@ -17,7 +18,7 @@ const CLINIC_INFO = {
   rif: "J-50800151-6",
   address: "C.C Novocentro piso 1, local 1-02, Puerto La Cruz 6023, Anzoátegui",
   phone: "0422-7180013",
-  email: "contacto@saludoriente.com",
+  email: "clinicaodsaludoriente@gmail.com",
 };
 
 const InvoiceGenerator = ({ open, onOpenChange, appointment, doctor, finance, tasaBCV }: InvoiceGeneratorProps) => {
@@ -43,6 +44,13 @@ const InvoiceGenerator = ({ open, onOpenChange, appointment, doctor, finance, ta
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
+    const fmtVES = (n: number) => {
+      const fixed = Math.abs(n).toFixed(2);
+      const [integer, decimal] = fixed.split('.');
+      const formatted = integer.replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.');
+      return `${n < 0 ? '-' : ''}${formatted},${decimal}`;
+    };
+
     printWindow.document.write(`
       <!DOCTYPE html>
       <html><head><title>Factura #${invoiceNumber.toString().padStart(6, "0")}</title>
@@ -60,11 +68,11 @@ const InvoiceGenerator = ({ open, onOpenChange, appointment, doctor, finance, ta
         .info-item { font-size: 13px; }
         .info-label { color: #888; }
         table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th { background: #2C2F2D; color: #435A53; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; text-align: left; }
+        th { background: #f5f5f0; color: #435A53; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; text-align: left; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
         .totals { text-align: right; margin-top: 20px; }
         .total-row { display: flex; justify-content: flex-end; gap: 40px; padding: 6px 0; font-size: 14px; }
-        .total-row.grand { font-size: 18px; font-weight: bold; color: #435A53; border-top: 2px solid #2C2F2D; padding-top: 12px; margin-top: 8px; }
+        .total-row.grand { font-size: 18px; font-weight: bold; color: #435A53; border-top: 2px solid #435A53; padding-top: 12px; margin-top: 8px; }
         .footer { margin-top: 60px; text-align: center; font-size: 11px; color: #999; border-top: 1px solid #eee; padding-top: 20px; }
         @media print { body { padding: 20px; } }
       </style></head>
@@ -97,14 +105,13 @@ const InvoiceGenerator = ({ open, onOpenChange, appointment, doctor, finance, ta
         <div class="section">
           <div class="section-title">Detalles del Servicio</div>
           <table>
-            <thead><tr><th>Servicio</th><th>Doctor</th><th>Fecha</th><th style="text-align:right">Monto USD</th><th style="text-align:right">Monto VES</th></tr></thead>
+            <thead><tr><th>Servicio</th><th>Doctor</th><th>Fecha</th><th style="text-align:right">Monto (Bs.)</th></tr></thead>
             <tbody>
               <tr>
                 <td>${appointment.treatment}</td>
                 <td>${doctor?.name || "—"}</td>
                 <td>${formattedDate}</td>
-                <td style="text-align:right">$${finance.treatmentPriceUSD.toFixed(2)}</td>
-                <td style="text-align:right">Bs. ${amountVES.toFixed(2)}</td>
+                <td style="text-align:right">Bs. ${fmtVES(amountVES)}</td>
               </tr>
             </tbody>
           </table>
@@ -112,11 +119,12 @@ const InvoiceGenerator = ({ open, onOpenChange, appointment, doctor, finance, ta
 
         <div class="totals">
           <div class="total-row"><span>Tasa BCV:</span><span>${tasaBCV.toFixed(2)} Bs/$</span></div>
-          <div class="total-row grand"><span>TOTAL:</span><span>$${finance.treatmentPriceUSD.toFixed(2)} / Bs. ${amountVES.toFixed(2)}</span></div>
+          <div class="total-row grand"><span>TOTAL:</span><span>Bs. ${fmtVES(amountVES)}</span></div>
         </div>
 
         <div class="footer">
-          ${CLINIC_INFO.name} • ${CLINIC_INFO.address} • Tel: ${CLINIC_INFO.phone}<br>
+          ${CLINIC_INFO.name} • RIF: ${CLINIC_INFO.rif} • ${CLINIC_INFO.address} • Tel: ${CLINIC_INFO.phone}<br>
+          ${CLINIC_INFO.email}<br>
           Gracias por su preferencia
         </div>
 
@@ -151,14 +159,10 @@ const InvoiceGenerator = ({ open, onOpenChange, appointment, doctor, finance, ta
 
           <div className="bg-card rounded-lg p-4 gold-border">
             <div className="flex justify-between items-center text-sm">
-              <span>Total USD</span>
-              <span className="font-bold text-primary">${finance.treatmentPriceUSD.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between items-center text-sm mt-1">
               <span>Total VES</span>
-              <span className="font-semibold">Bs. {amountVES.toFixed(2)}</span>
+              <span className="font-bold text-primary">Bs. {formatVES(amountVES)}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Tasa BCV: {tasaBCV.toFixed(2)}</p>
+            <p className="text-xs text-muted-foreground mt-1">Tasa BCV: {tasaBCV.toFixed(2)} Bs/$</p>
           </div>
 
           <div className="flex items-center gap-2">

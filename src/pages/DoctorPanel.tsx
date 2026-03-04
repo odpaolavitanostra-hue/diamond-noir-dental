@@ -13,6 +13,7 @@ import DoctorProfileEditor from "@/components/admin/DoctorProfileEditor";
 import BudgetGenerator from "@/components/admin/BudgetGenerator";
 import ClinicalHistoryForm from "@/components/clinical/ClinicalHistoryForm";
 import { type Patient } from "@/hooks/useClinicData";
+import { formatVES } from "@/lib/formatVES";
 
 const DoctorPanel = () => {
   const navigate = useNavigate();
@@ -142,7 +143,6 @@ const DoctorPanel = () => {
       odontogram.loadState(app.odontogramData as OdontogramData);
       setOdontogramNotes((app.odontogramData as any)?._notes || "");
     } else {
-      // Check if there's a previous appointment for this patient with odontogram data
       const prevApps = myAppointments
         .filter(a => a.patientName === app?.patientName && a.id !== appId && a.odontogramData)
         .sort((a, b) => `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`));
@@ -175,7 +175,7 @@ const DoctorPanel = () => {
   if (!doctor) return (
     <div className="min-h-screen bg-background flex items-center justify-center flex-col gap-4 px-4 text-center">
       <p className="text-muted-foreground">No se encontró un perfil de doctor asociado a tu cuenta ({user.email}).</p>
-      <button onClick={handleLogout} className="bg-gold text-gold-foreground px-4 py-2 rounded-lg text-sm font-semibold">Cerrar sesión</button>
+      <button onClick={handleLogout} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold">Cerrar sesión</button>
     </div>
   );
 
@@ -184,13 +184,12 @@ const DoctorPanel = () => {
       <header className="noir-gradient py-3 sticky top-0 z-50">
         <div className="container mx-auto px-4 flex items-center justify-between">
           <div className="min-w-0 flex-1">
-            <h2 className="font-display text-lg text-gold font-semibold truncate">{doctor.name}</h2>
+            <h2 className="font-display text-lg text-pearl font-semibold truncate">{doctor.name}</h2>
             <p className="text-noir-foreground/50 text-xs truncate">{doctor.specialty}{doctor.cov ? ` • COV: ${doctor.cov}` : ''}</p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Notifications */}
             <div className="relative">
-              <button onClick={() => setShowNotifications(!showNotifications)} className="relative text-noir-foreground/60 hover:text-gold transition-colors p-1">
+              <button onClick={() => setShowNotifications(!showNotifications)} className="relative text-noir-foreground/60 hover:text-primary transition-colors p-1">
                 <Bell className="w-5 h-5" />
                 {notifications.length > 0 && (
                   <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center animate-pulse font-bold">{notifications.length}</span>
@@ -219,7 +218,7 @@ const DoctorPanel = () => {
                 </div>
               )}
             </div>
-            <button onClick={handleLogout} className="text-noir-foreground/60 hover:text-gold transition-colors flex items-center gap-1 text-sm">
+            <button onClick={handleLogout} className="text-noir-foreground/60 hover:text-primary transition-colors flex items-center gap-1 text-sm">
               <LogOut className="w-4 h-4" /> <span className="hidden sm:inline">Salir</span>
             </button>
           </div>
@@ -229,13 +228,13 @@ const DoctorPanel = () => {
       <div className="container mx-auto px-3 sm:px-4 py-4 max-w-4xl space-y-4">
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-          <StatCard icon={<CalendarDays className="w-4 h-4 sm:w-5 sm:h-5 text-gold" />} label="Pendientes" value={pendingCount.toString()} />
+          <StatCard icon={<CalendarDays className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />} label="Pendientes" value={pendingCount.toString()} />
           <StatCard icon={<CalendarDays className="w-4 h-4 sm:w-5 sm:h-5 text-clinic-green" />} label="Completadas" value={completedCount.toString()} />
-          <StatCard icon={<DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-gold" />} label="Ganado USD" value={`$${totalEarnedUSD.toFixed(2)}`} />
-          <StatCard icon={<DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-gold" />} label="Ganado VES" value={`Bs. ${(totalEarnedUSD * tasaBCV).toFixed(0)}`} />
+          <StatCard icon={<DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />} label="Ganado USD" value={`$${totalEarnedUSD.toFixed(2)}`} />
+          <StatCard icon={<DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />} label="Ganado VES" value={`Bs. ${formatVES(totalEarnedUSD * tasaBCV)}`} />
         </div>
 
-        {/* Tabs - scrollable on mobile */}
+        {/* Tabs */}
         <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
           {[
             { key: "agenda" as const, label: "Agenda", icon: <CalendarDays className="w-4 h-4" /> },
@@ -245,7 +244,7 @@ const DoctorPanel = () => {
             { key: "inventario" as const, label: "Inventario", icon: <Package className="w-4 h-4" /> },
             { key: "perfil" as const, label: "Perfil", icon: <User className="w-4 h-4" /> },
           ].map((tab) => (
-            <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${activeTab === tab.key ? "bg-gold text-gold-foreground" : "bg-card gold-border hover:bg-muted"}`}>
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${activeTab === tab.key ? "bg-primary text-primary-foreground" : "bg-card gold-border hover:bg-muted"}`}>
               {tab.icon} {tab.label}
             </button>
           ))}
@@ -296,7 +295,7 @@ const DoctorPanel = () => {
                         );
                       })}
                       <div className="flex gap-2 pt-1">
-                        <button onClick={() => handleComplete(app.id)} className="bg-gold text-gold-foreground px-3 py-1.5 rounded-lg text-xs font-semibold">Confirmar</button>
+                        <button onClick={() => handleComplete(app.id)} className="bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-xs font-semibold">Confirmar</button>
                         <button onClick={() => setCompleting(null)} className="bg-muted-foreground/10 text-foreground px-3 py-1.5 rounded-lg text-xs">Cancelar</button>
                       </div>
                     </div>
@@ -306,7 +305,7 @@ const DoctorPanel = () => {
                   <div className="mt-3 border-t border-border pt-2">
                     <button
                       onClick={() => toggleOdontogram(app.id)}
-                      className="flex items-center gap-2 text-xs font-semibold text-gold hover:text-gold/80 transition-colors w-full justify-between"
+                      className="flex items-center gap-2 text-xs font-semibold text-primary hover:text-primary/80 transition-colors w-full justify-between"
                     >
                       <span className="flex items-center gap-1.5">🦷 Herramientas Clínicas — Odontograma</span>
                       {odontogramAppId === app.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -324,7 +323,7 @@ const DoctorPanel = () => {
                         />
                         <button
                           onClick={() => saveOdontogram(app.id)}
-                          className="w-full bg-gold text-gold-foreground py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                          className="w-full bg-primary text-primary-foreground py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
                         >
                           <Save className="w-4 h-4" /> Guardar Odontograma
                         </button>
@@ -332,7 +331,6 @@ const DoctorPanel = () => {
                     )}
                   </div>
 
-                  {/* View historical odontogram for completed appointments */}
                   {app.odontogramData && odontogramAppId !== app.id && (
                     <p className="text-[10px] text-muted-foreground mt-1">✅ Odontograma registrado</p>
                   )}
@@ -358,7 +356,7 @@ const DoctorPanel = () => {
                       <input className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={patientForm.email} onChange={(e) => setPatientForm(f => ({...f, email: e.target.value}))} placeholder="Email" />
                       <textarea className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border resize-none" rows={2} value={patientForm.notes} onChange={(e) => setPatientForm(f => ({...f, notes: e.target.value}))} placeholder="Notas" />
                       <div className="flex gap-2">
-                        <button onClick={() => savePatient(p.id)} className="bg-gold text-gold-foreground px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1"><Save className="w-3 h-3" /> Guardar</button>
+                        <button onClick={() => savePatient(p.id)} className="bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1"><Save className="w-3 h-3" /> Guardar</button>
                         <button onClick={() => setEditingPatient(null)} className="bg-muted-foreground/10 text-foreground px-3 py-1.5 rounded-lg text-xs flex items-center gap-1"><X className="w-3 h-3" /> Cancelar</button>
                       </div>
                     </div>
@@ -375,7 +373,7 @@ const DoctorPanel = () => {
                           <button onClick={() => setClinicalHistoryPatient(p)} className="p-1.5 rounded-lg bg-clinic-green/10 text-clinic-green hover:bg-clinic-green/20" title="Historia Clínica">
                             <ClipboardList className="w-4 h-4" />
                           </button>
-                          <button onClick={() => startEditPatient(p)} className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20" title="Editar">
+                          <button onClick={() => startEditPatient(p)} className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Editar">
                             <Edit2 className="w-4 h-4" />
                           </button>
                         </div>
@@ -391,7 +389,7 @@ const DoctorPanel = () => {
                             ))}
                           </div>
                         )}
-                        <label className={`inline-flex items-center gap-1 mt-1 text-xs text-gold cursor-pointer hover:underline ${uploadingPhoto ? 'opacity-50' : ''}`}>
+                        <label className={`inline-flex items-center gap-1 mt-1 text-xs text-primary cursor-pointer hover:underline ${uploadingPhoto ? 'opacity-50' : ''}`}>
                           <Upload className="w-3 h-3" /> {uploadingPhoto ? "Subiendo..." : "Agregar foto"}
                           <input type="file" accept="image/*" className="hidden" disabled={uploadingPhoto} onChange={(e) => { if (e.target.files?.[0]) handlePhotoUpload(p.id, e.target.files[0]); }} />
                         </label>
@@ -402,7 +400,7 @@ const DoctorPanel = () => {
                         <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1"><FileText className="w-3 h-3" /> Historia Clínica</p>
                         {p.clinicalHistoryUrl ? (
                           <div className="flex items-center gap-2 flex-wrap">
-                            <button onClick={() => setViewingPdf(viewingPdf === p.id ? null : p.id)} className="text-xs text-gold hover:underline">
+                            <button onClick={() => setViewingPdf(viewingPdf === p.id ? null : p.id)} className="text-xs text-primary hover:underline">
                               {viewingPdf === p.id ? "Cerrar visor" : "Ver PDF"}
                             </button>
                             <a href={p.clinicalHistoryUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:underline">Abrir en nueva pestaña</a>
@@ -413,7 +411,7 @@ const DoctorPanel = () => {
                         {viewingPdf === p.id && p.clinicalHistoryUrl && (
                           <iframe src={p.clinicalHistoryUrl} className="w-full h-64 sm:h-96 mt-2 rounded-lg border border-border" title="Historia Clínica" />
                         )}
-                        <label className={`inline-flex items-center gap-1 mt-1 text-xs text-gold cursor-pointer hover:underline ${uploadingPdf ? 'opacity-50' : ''}`}>
+                        <label className={`inline-flex items-center gap-1 mt-1 text-xs text-primary cursor-pointer hover:underline ${uploadingPdf ? 'opacity-50' : ''}`}>
                           <Upload className="w-3 h-3" /> {uploadingPdf ? "Subiendo..." : "Subir PDF"}
                           <input type="file" accept=".pdf" className="hidden" disabled={uploadingPdf} onChange={(e) => { if (e.target.files?.[0]) handlePdfUpload(p.id, e.target.files[0]); }} />
                         </label>
@@ -449,12 +447,12 @@ const DoctorPanel = () => {
         {activeTab === "recipe" && (
           <div className="space-y-4">
             <h3 className="font-display text-lg font-semibold flex items-center gap-2">
-              <Stethoscope className="w-5 h-5 text-gold" /> Emitir Recipe Médico
+              <Stethoscope className="w-5 h-5 text-primary" /> Emitir Recipe Médico
             </h3>
             <div className="bg-card rounded-xl p-4 sm:p-5 gold-border space-y-3">
               <div>
                 <label className="block text-xs font-medium mb-1">Paciente</label>
-                <select className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-gold focus:outline-none" value={recipeForm.patientId} onChange={(e) => handleRecipePatientSelect(e.target.value)}>
+                <select className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border focus:border-primary focus:outline-none" value={recipeForm.patientId} onChange={(e) => handleRecipePatientSelect(e.target.value)}>
                   <option value="">Seleccionar paciente</option>
                   {myPatients.map((p) => (
                     <option key={p.id} value={p.id}>{p.name} — C.I. {p.cedula}</option>
@@ -484,7 +482,7 @@ const DoctorPanel = () => {
                 <textarea className="w-full bg-muted rounded-lg px-3 py-2.5 text-sm border border-border resize-none" rows={5} value={recipeForm.content} onChange={(e) => setRecipeForm(f => ({ ...f, content: e.target.value }))} placeholder="Medicamentos, dosis, indicaciones..." />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <button onClick={handlePrintRecipe} disabled={!recipeForm.content} className="bg-gold text-gold-foreground py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 text-sm">
+                <button onClick={handlePrintRecipe} disabled={!recipeForm.content} className="bg-primary text-primary-foreground py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 text-sm">
                   <FileText className="w-4 h-4" /> Imprimir/PDF
                 </button>
                 <button onClick={() => { if (recipeForm.patientPhone) sendRecipeWhatsApp(recipeForm.patientName, recipeForm.patientPhone); else toast.error("Ingrese teléfono"); }} disabled={!recipeForm.content}
@@ -503,9 +501,9 @@ const DoctorPanel = () => {
         {activeTab === "presupuesto" && (
           <div className="space-y-4">
             <h3 className="font-display text-lg font-semibold flex items-center gap-2">
-              <FileText className="w-5 h-5 text-gold" /> Presupuesto Odontológico
+              <FileText className="w-5 h-5 text-primary" /> Presupuesto Odontológico
             </h3>
-            <button onClick={() => setShowBudget(true)} className="w-full bg-gold text-gold-foreground py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity text-sm">
+            <button onClick={() => setShowBudget(true)} className="w-full bg-primary text-primary-foreground py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity text-sm">
               <FileText className="w-4 h-4" /> Crear Presupuesto
             </button>
             <BudgetGenerator open={showBudget} onOpenChange={setShowBudget} doctors={doctors} patients={myPatients} treatments={treatments} tasaBCV={tasaBCV} currentDoctor={doctor} />
@@ -516,7 +514,7 @@ const DoctorPanel = () => {
         {activeTab === "perfil" && (
           <div className="space-y-4">
             <h3 className="font-display text-lg font-semibold flex items-center gap-2">
-              <User className="w-5 h-5 text-gold" /> Mi Perfil
+              <User className="w-5 h-5 text-primary" /> Mi Perfil
             </h3>
             <div className="bg-card rounded-xl p-4 gold-border space-y-2">
               <p className="font-semibold">{doctor.name}</p>
