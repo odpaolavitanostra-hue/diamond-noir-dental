@@ -251,11 +251,11 @@ export const AdminLeads = () => {
 
               <div className="space-y-2">
                 {columnLeads.map(lead => (
-                  <div key={lead.id} className="bg-card rounded-lg p-3 border border-border/50 space-y-2 hover:border-primary/30 transition-all">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-1.5">
-                        {lead.isHighValue && <Star className="w-3.5 h-3.5 text-primary fill-primary" />}
-                        <p className="text-sm font-semibold leading-tight">{lead.name}</p>
+                  <div key={lead.id} className="bg-card rounded-lg p-4 border border-border/50 space-y-2 hover:border-primary/30 transition-all">
+                     <div className="flex items-start justify-between">
+                       <div className="flex items-center gap-1.5">
+                         {lead.isHighValue && <Star className="w-4 h-4 text-primary fill-primary" />}
+                         <p className="font-display text-base font-semibold leading-tight">{lead.name}</p>
                       </div>
                       <div className="flex gap-1">
                         <button onClick={() => editLead(lead)} className="text-muted-foreground hover:text-primary"><Edit2 className="w-3 h-3" /></button>
