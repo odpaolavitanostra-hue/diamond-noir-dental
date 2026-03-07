@@ -202,7 +202,7 @@
   .backdrop-luxury {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    background: hsla(150, 5%, 10%, 0.8);
+    background: hsla(0, 0%, 0%, 0.5);
   }
 
   /* ─── Module transition (Fade & Slide 0.4s) ─── */
