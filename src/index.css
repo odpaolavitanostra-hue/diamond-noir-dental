@@ -6,24 +6,24 @@
 
 @layer base {
   :root {
-    /* ─── Diamond Noir V74.0 — Dark-First Palette ─── */
-    --background: 150 5% 14%;
-    --foreground: 40 30% 96%;
+    /* ─── Diamond Noir V74.1 — Refined Dark with Warm Contrast ─── */
+    --background: 180 3% 93%;
+    --foreground: 150 8% 15%;
 
-    --card: 150 5% 18%;
-    --card-foreground: 40 30% 96%;
+    --card: 0 0% 99%;
+    --card-foreground: 150 8% 15%;
 
-    --popover: 150 5% 16%;
-    --popover-foreground: 40 30% 96%;
+    --popover: 0 0% 99%;
+    --popover-foreground: 150 8% 15%;
 
     --primary: 43 78% 62%;
     --primary-foreground: 150 5% 12%;
 
-    --secondary: 150 5% 22%;
-    --secondary-foreground: 40 30% 96%;
+    --secondary: 180 3% 88%;
+    --secondary-foreground: 150 8% 15%;
 
-    --muted: 150 5% 20%;
-    --muted-foreground: 40 10% 60%;
+    --muted: 180 3% 90%;
+    --muted-foreground: 150 5% 45%;
 
     --accent: 43 78% 62%;
     --accent-foreground: 150 5% 12%;
@@ -31,8 +31,8 @@
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 150 5% 24%;
-    --input: 150 5% 24%;
+    --border: 180 4% 82%;
+    --input: 180 4% 82%;
     --ring: 43 78% 62%;
 
     --radius: 0.75rem;
@@ -50,7 +50,7 @@
     --noir-light: 150 5% 18%;
     --noir-foreground: 40 30% 96%;
 
-    --pearl: 40 30% 96%;
+    --pearl: 40 30% 97%;
     --pearl-foreground: 150 5% 12%;
 
     --clinic-green: 160 28% 50%;
@@ -60,11 +60,11 @@
     --warning: 43 72% 55%;
     --info: 210 60% 50%;
 
-    --sidebar-background: 150 5% 10%;
+    --sidebar-background: 150 5% 12%;
     --sidebar-foreground: 40 30% 96%;
     --sidebar-primary: 43 78% 62%;
     --sidebar-primary-foreground: 150 5% 12%;
-    --sidebar-accent: 150 5% 16%;
+    --sidebar-accent: 150 5% 18%;
     --sidebar-accent-foreground: 40 30% 96%;
     --sidebar-border: 150 5% 20%;
     --sidebar-ring: 43 78% 62%;
@@ -72,9 +72,9 @@
     --font-display: 'Space Grotesk', sans-serif;
     --font-body: 'Poppins', sans-serif;
 
-    --glass-bg: 0 0% 100% / 0.06;
-    --glass-border: 0 0% 100% / 0.1;
-    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    --glass-bg: 0 0% 100% / 0.7;
+    --glass-border: 0 0% 100% / 0.5;
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
   }
 }
 
@@ -98,13 +98,20 @@
     letter-spacing: -0.01em;
   }
 
-  /* Scrollbar styling for Diamond Noir */
+  /* Scrollbar styling */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: hsl(var(--noir));
+    background: hsl(var(--background));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
   }
   ::-webkit-scrollbar-thumb {
     background: hsl(var(--border));
@@ -125,11 +132,11 @@
   }
 
   .glass-card-pearl {
-    background: hsla(150, 5%, 18%, 0.85);
+    background: hsla(0, 0%, 100%, 0.85);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid hsla(150, 5%, 24%, 0.6);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+    border: 1px solid hsla(180, 3%, 88%, 0.6);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.06);
   }
 
   .gold-border {
@@ -195,7 +202,7 @@
   .backdrop-luxury {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    background: hsla(150, 5%, 10%, 0.8);
+    background: hsla(0, 0%, 0%, 0.5);
   }
 
   /* ─── Module transition (Fade & Slide 0.4s) ─── */
