@@ -72,9 +72,9 @@
     --font-display: 'Space Grotesk', sans-serif;
     --font-body: 'Poppins', sans-serif;
 
-    --glass-bg: 0 0% 100% / 0.06;
-    --glass-border: 0 0% 100% / 0.1;
-    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    --glass-bg: 0 0% 100% / 0.7;
+    --glass-border: 0 0% 100% / 0.5;
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
   }
 }
 
