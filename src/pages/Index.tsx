@@ -232,7 +232,7 @@ const Index = () => {
       {/* ── FOOTER ── */}
       <footer className="noir-gradient py-10 border-t border-noir-light/20">
         <div className="container mx-auto px-4 text-center space-y-4">
-          <img src={logoWhite} alt="Salud Oriente" className="h-12 w-auto mx-auto mb-2" />
+          <img src={logoWhite} alt="Salud Oriente" className="h-[80px] md:h-[100px] w-auto max-w-[350px] mx-auto mb-2" />
           <p className="text-noir-foreground/90 text-xl md:text-2xl font-display font-semibold italic">
             "Tu sonrisa merece lo mejor..."
           </p>
