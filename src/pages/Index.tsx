@@ -30,10 +30,12 @@ const Index = () => {
   const [rentalOpen, setRentalOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [bookingTreatment, setBookingTreatment] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const openBooking = (treatment = "") => {
     setBookingTreatment(treatment);
     setBookingOpen(true);
+    setMobileMenuOpen(false);
   };
 
   return (
