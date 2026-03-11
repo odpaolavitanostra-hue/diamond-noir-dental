@@ -40,21 +40,46 @@ const Index = () => {
       {/* ── STICKY NAVBAR ── */}
       <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-[10px] bg-noir/80 border-b border-noir-light/30">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/" className="flex items-center">
-            <img src={logoWhite} alt="Clínica Odontológica Salud Oriente" className="h-[60px] w-auto" />
-          </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            <a href="#servicios" className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium">Servicios</a>
-            <a href="#contacto" className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium">Contacto</a>
+          {/* Left: Nav links (desktop) */}
+          <nav className="hidden md:flex items-center gap-6 flex-1">
+            <a href="#servicios" className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium">Tratamientos</a>
+            <a href="#contacto" className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium">Nosotros</a>
             <button onClick={() => setRentalOpen(true)} className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium">
               Alquiler
             </button>
           </nav>
+
+          {/* Center: Logo */}
+          <Link to="/" className="flex items-center justify-center mx-4 md:mx-0">
+            <img
+              src={logoWhite}
+              alt="Clínica Odontológica Salud Oriente"
+              className="h-[70px] w-auto md:h-[80px] max-w-[250px] md:max-w-[300px]"
+            />
+          </Link>
+
+          {/* Right: Action buttons (desktop) */}
+          <div className="hidden md:flex items-center gap-3 flex-1 justify-end">
+            <a
+              href="#contacto"
+              className="px-5 py-2 text-sm font-semibold rounded border border-clinic-green text-noir-foreground hover:bg-clinic-green/10 transition-colors"
+            >
+              Contactar
+            </a>
+            <button
+              onClick={() => openBooking()}
+              className="btn-gold px-5 py-2 text-sm flex items-center gap-2"
+            >
+              <CalendarDays className="w-4 h-4" /> Agendar Cita
+            </button>
+          </div>
+
+          {/* Mobile: CTA only */}
           <button
             onClick={() => openBooking()}
-            className="btn-gold px-5 py-2 text-sm flex items-center gap-2"
+            className="md:hidden btn-gold px-4 py-2 text-sm flex items-center gap-2"
           >
-            <CalendarDays className="w-4 h-4" /> Cita Rápida
+            <CalendarDays className="w-4 h-4" /> Cita
           </button>
         </div>
       </header>
