@@ -12,6 +12,7 @@ import heroImage from "@/assets/hero-clinic.jpg";
 import logoIcon from "@/assets/logo-icon-white.png";
 import logoWhite from "@/assets/logo-white.png";
 import logoGreen from "@/assets/logo-green.svg";
+import logoHeaderWhite from "@/assets/logo-header-white.png";
 
 const SERVICES: { name: string; treatment: string; icon: LucideIcon; img?: string; desc: string }[] = [
   { name: "Blanqueamiento", treatment: "Blanqueamiento", icon: Sparkles, desc: "Ilumina tu sonrisa con tratamientos profesionales seguros y efectivos." },
@@ -43,27 +44,43 @@ const Index = () => {
     <div className="min-h-screen bg-background font-body">
       {/* ── STICKY NAVBAR ── */}
       <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-[10px] bg-noir/80 border-b border-noir-light/30">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          {/* Left: Logo (principal) */}
-          <Link to="/" className="flex items-center shrink-0 ml-0 md:ml-8">
+        <div className="container mx-auto px-4 py-2 flex items-center justify-between">
+          {/* Left: Isotipo */}
+          <Link to="/" className="flex items-center shrink-0">
             <img
               src={logoIcon}
               alt="Clínica Odontológica Salud Oriente"
-              className="w-[60px] md:w-[80px] h-[60px] md:h-[80px] object-contain"
+              className="w-[45px] md:w-[55px] h-[45px] md:h-[55px] object-contain"
             />
           </Link>
 
-          {/* Center: Nav links (desktop) */}
-          <nav className="hidden md:flex items-center gap-6">
-            <a href="#servicios" className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium">Tratamientos</a>
-            <a href="#contacto" className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium">Nosotros</a>
-            <button onClick={() => setRentalOpen(true)} className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium">
-              Alquiler
-            </button>
-          </nav>
+          {/* Center: Logo text + Nav links (desktop) */}
+          <div className="hidden md:flex flex-col items-center flex-1 mx-4">
+            <img
+              src={logoHeaderWhite}
+              alt="Clínica Odontológica Salud Oriente"
+              className="h-[28px] lg:h-[34px] w-auto object-contain mb-1 opacity-90"
+            />
+            <nav className="flex items-center gap-6">
+              <a href="#servicios" className="text-noir-foreground/70 hover:text-gold transition-colors text-xs font-medium tracking-wide uppercase">Tratamientos</a>
+              <a href="#contacto" className="text-noir-foreground/70 hover:text-gold transition-colors text-xs font-medium tracking-wide uppercase">Nosotros</a>
+              <button onClick={() => setRentalOpen(true)} className="text-noir-foreground/70 hover:text-gold transition-colors text-xs font-medium tracking-wide uppercase">
+                Alquiler
+              </button>
+            </nav>
+          </div>
+
+          {/* Mobile center: Logo text */}
+          <div className="md:hidden flex-1 flex justify-center mx-2">
+            <img
+              src={logoHeaderWhite}
+              alt="Clínica Odontológica Salud Oriente"
+              className="h-[20px] w-auto object-contain opacity-90"
+            />
+          </div>
 
           {/* Right: Action buttons (desktop) + Mobile hamburger & CTA */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <div className="hidden md:flex items-center gap-3">
               <a
                 href="#contacto"
