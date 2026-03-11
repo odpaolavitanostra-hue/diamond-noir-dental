@@ -1,31 +1,28 @@
 import { useState } from "react";
 import {
-  MapPin, Phone, Clock, ArrowRight, Building2, CalendarDays, MessageCircle
+  MapPin, Phone, Clock, ArrowRight, Building2, CalendarDays, MessageCircle,
+  Sparkles, HeartPulse, Scissors, SprayCan, Search, Cog, Layers, CircleDot, HelpCircle,
+  type LucideIcon
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import RentalRequestForm from "@/components/booking/RentalRequestForm";
 import BookingDialog from "@/components/booking/BookingDialog";
 import heroImage from "@/assets/hero-clinic.jpg";
-import serviceBlanqueamiento from "@/assets/service-blanqueamiento.jpg";
-import serviceEndodoncia from "@/assets/service-endodoncia.jpg";
-import serviceExtraccion from "@/assets/service-extraccion.jpg";
-import serviceLimpieza from "@/assets/service-limpieza.jpg";
-import serviceRevision from "@/assets/service-revision.jpg";
-import serviceProtesis from "@/assets/service-protesis.jpg";
-import serviceResina from "@/assets/service-resina.jpg";
-import serviceImplantes from "@/assets/service-implantes.jpg";
-import serviceOtros from "@/assets/service-otros.jpg";
 
-const SERVICES = [
-  { name: "Blanqueamiento", treatment: "Blanqueamiento", img: serviceBlanqueamiento, desc: "Ilumina tu sonrisa con tratamientos profesionales seguros y efectivos." },
-  { name: "Endodoncia", treatment: "Endodoncia", img: serviceEndodoncia, desc: "Tratamiento de conductos para salvar y preservar tu pieza dental." },
-  { name: "Extracción", treatment: "Extracción", img: serviceExtraccion, desc: "Procedimientos seguros y modernos con mínima molestia." },
-  { name: "Limpieza Dental", treatment: "Limpieza Dental", img: serviceLimpieza, desc: "Eliminación de placa y sarro para una sonrisa radiante." },
-  { name: "Revisión", treatment: "Revisión", img: serviceRevision, desc: "Evaluación completa de tu salud bucal con diagnóstico preciso." },
-  { name: "Prótesis", treatment: "Prótesis", img: serviceProtesis, desc: "Soluciones protésicas personalizadas para restaurar tu sonrisa." },
-  { name: "Resina Compuesta", treatment: "Resina Compuesta", img: serviceResina, desc: "Restauraciones estéticas con materiales de última generación." },
-  { name: "Implantes", treatment: "Implantes", img: serviceImplantes, desc: "Implantes dentales de alta calidad para resultados permanentes." },
-  { name: "Otros", treatment: "Otros", img: serviceOtros, desc: "Consulta personalizada según tus necesidades específicas." },
+// Para añadir imágenes reales: importa la imagen y agrégala al campo `img`.
+// Ejemplo: import imgBlanqueamiento from "@/assets/service-blanqueamiento.jpg";
+// Luego: { ..., img: imgBlanqueamiento }
+
+const SERVICES: { name: string; treatment: string; icon: LucideIcon; img?: string; desc: string }[] = [
+  { name: "Blanqueamiento", treatment: "Blanqueamiento", icon: Sparkles, desc: "Ilumina tu sonrisa con tratamientos profesionales seguros y efectivos." },
+  { name: "Endodoncia", treatment: "Endodoncia", icon: HeartPulse, desc: "Tratamiento de conductos para salvar y preservar tu pieza dental." },
+  { name: "Extracción", treatment: "Extracción", icon: Scissors, desc: "Procedimientos seguros y modernos con mínima molestia." },
+  { name: "Limpieza Dental", treatment: "Limpieza Dental", icon: SprayCan, desc: "Eliminación de placa y sarro para una sonrisa radiante." },
+  { name: "Revisión", treatment: "Revisión", icon: Search, desc: "Evaluación completa de tu salud bucal con diagnóstico preciso." },
+  { name: "Prótesis", treatment: "Prótesis", icon: Cog, desc: "Soluciones protésicas personalizadas para restaurar tu sonrisa." },
+  { name: "Resina Compuesta", treatment: "Resina Compuesta", icon: Layers, desc: "Restauraciones estéticas con materiales de última generación." },
+  { name: "Implantes", treatment: "Implantes", icon: CircleDot, desc: "Implantes dentales de alta calidad para resultados permanentes." },
+  { name: "Otros", treatment: "Otros", icon: HelpCircle, desc: "Consulta personalizada según tus necesidades específicas." },
 ];
 
 const WA_LINK = "https://wa.me/584227180013?text=Hola,%20deseo%20agendar%20una%20evaluación%20en%20Salud%20Oriente.";
