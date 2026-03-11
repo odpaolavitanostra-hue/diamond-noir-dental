@@ -143,6 +143,17 @@
     border: 1px solid hsl(var(--gold));
   }
 
+  /* ─── Service Card with green gradient border & glow ─── */
+  .service-card {
+    border-image: linear-gradient(180deg, hsl(var(--clinic-green)), transparent) 1;
+    border-width: 1px;
+    transition: all 0.3s ease;
+  }
+  .service-card:hover {
+    box-shadow: 0 0 24px hsla(160, 28%, 50%, 0.15);
+    transform: translateY(-4px);
+  }
+
   .gold-glow {
     box-shadow: 0 0 20px hsla(43, 72%, 55%, 0.3);
   }

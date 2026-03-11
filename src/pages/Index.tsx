@@ -8,10 +8,8 @@ import { Link } from "react-router-dom";
 import RentalRequestForm from "@/components/booking/RentalRequestForm";
 import BookingDialog from "@/components/booking/BookingDialog";
 import heroImage from "@/assets/hero-clinic.jpg";
-
-// Para añadir imágenes reales: importa la imagen y agrégala al campo `img`.
-// Ejemplo: import imgBlanqueamiento from "@/assets/service-blanqueamiento.jpg";
-// Luego: { ..., img: imgBlanqueamiento }
+import logoWhite from "@/assets/logo-white.png";
+import logoGreen from "@/assets/logo-green.png";
 
 const SERVICES: { name: string; treatment: string; icon: LucideIcon; img?: string; desc: string }[] = [
   { name: "Blanqueamiento", treatment: "Blanqueamiento", icon: Sparkles, desc: "Ilumina tu sonrisa con tratamientos profesionales seguros y efectivos." },
@@ -42,8 +40,8 @@ const Index = () => {
       {/* ── STICKY NAVBAR ── */}
       <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-[10px] bg-noir/80 border-b border-noir-light/30">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/" className="font-display text-lg md:text-xl text-gold font-bold tracking-wide">
-            COSO
+          <Link to="/" className="flex items-center">
+            <img src={logoWhite} alt="Clínica Odontológica Salud Oriente" className="h-[60px] w-auto" />
           </Link>
           <nav className="hidden md:flex items-center gap-6">
             <a href="#servicios" className="text-noir-foreground/70 hover:text-gold transition-colors text-sm font-medium">Servicios</a>
@@ -71,6 +69,10 @@ const Index = () => {
             loading="eager"
           />
           <div className="absolute inset-0 hero-overlay" />
+          {/* Watermark isotipo */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <img src={logoWhite} alt="" className="w-[600px] h-auto opacity-[0.03]" aria-hidden="true" />
+          </div>
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsla(43,78%,62%,0.06)_0%,_transparent_70%)]" />
 
           <div className="relative z-10 container mx-auto px-4 pt-24 lg:pt-32 pb-16 lg:pb-24">
@@ -83,7 +85,7 @@ const Index = () => {
                 <span className="text-gold">Puerto La Cruz</span>
               </h1>
               <p className="text-noir-foreground/80 text-lg md:text-xl mb-10 max-w-xl mx-auto animate-fade-up-delay-2 leading-relaxed">
-                Recupera tu sonrisa con tratamientos modernos, seguros y personalizados.
+                Tu sonrisa merece lo mejor...
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up-delay-3">
                 <button
@@ -94,7 +96,7 @@ const Index = () => {
                 </button>
                 <button
                   onClick={() => setRentalOpen(true)}
-                  className="inline-flex items-center gap-2 px-8 py-4 text-lg font-semibold rounded border-2 border-gold text-gold hover:bg-gold/10 transition-colors"
+                  className="inline-flex items-center gap-2 px-8 py-4 text-lg font-semibold rounded border-2 border-clinic-green text-noir-foreground hover:bg-clinic-green/10 transition-colors"
                 >
                   Alquiler para Profesionales <Building2 className="w-5 h-5" />
                 </button>
@@ -125,7 +127,7 @@ const Index = () => {
                   <button
                     key={s.name}
                     onClick={() => openBooking(s.treatment)}
-                    className="bg-card rounded-xl overflow-hidden text-left border border-border hover:border-clinic-green hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
+                    className="service-card bg-card rounded-xl overflow-hidden text-left border border-border group"
                   >
                     {s.img ? (
                       <div className="h-44 overflow-hidden">
@@ -137,7 +139,7 @@ const Index = () => {
                         />
                       </div>
                     ) : (
-                      <div className="h-44 flex items-center justify-center bg-secondary/40 group-hover:bg-secondary/60 transition-colors duration-300">
+                      <div className="h-44 flex items-center justify-center bg-secondary/40 group-hover:bg-clinic-green/5 transition-colors duration-300">
                         <Icon className="w-14 h-14 text-gold group-hover:scale-110 transition-transform duration-300" strokeWidth={1.5} />
                       </div>
                     )}
@@ -153,25 +155,28 @@ const Index = () => {
         </section>
 
         {/* ── CONTACTO & MAPA ── */}
-        <section id="contacto" className="relative py-20 noir-gradient">
+        <section id="contacto" className="relative py-20 bg-pearl">
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto -mt-32 relative z-10 bg-card rounded-2xl shadow-xl border border-border p-8 md:p-12 mb-12">
-              <h2 className="font-display text-2xl md:text-3xl font-bold mb-6 text-center">
-                ¿Listo para tu nueva <span className="text-gold">sonrisa</span>?
+            <div className="max-w-4xl mx-auto -mt-32 relative z-10 bg-card rounded-2xl shadow-xl border border-clinic-green/10 p-8 md:p-12 mb-12">
+              <div className="flex justify-center mb-6">
+                <img src={logoGreen} alt="Clínica Odontológica Salud Oriente" className="h-20 w-auto" />
+              </div>
+              <h2 className="font-display text-2xl md:text-3xl font-bold mb-6 text-center text-pearl-foreground">
+                ¿Listo para tu nueva <span className="text-clinic-green">sonrisa</span>?
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                <a href="https://maps.app.goo.gl/Ku3FFCzB6b9RB5sm9" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 hover:text-gold transition-colors">
-                  <MapPin className="w-6 h-6 text-gold" />
+                <a href="https://maps.app.goo.gl/Ku3FFCzB6b9RB5sm9" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-pearl-foreground hover:text-clinic-green transition-colors">
+                  <MapPin className="w-6 h-6 text-clinic-green" />
                   <span className="font-display font-semibold">Ubicación</span>
                   <span className="text-muted-foreground text-sm">C.C Novocentro piso 1, local 1-02, Puerto La Cruz, Anzoátegui</span>
                 </a>
-                <a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 hover:text-gold transition-colors">
-                  <Phone className="w-6 h-6 text-gold" />
+                <a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-pearl-foreground hover:text-clinic-green transition-colors">
+                  <Phone className="w-6 h-6 text-clinic-green" />
                   <span className="font-display font-semibold">WhatsApp</span>
                   <span className="text-muted-foreground text-sm">0422-7180013</span>
                 </a>
-                <div className="flex flex-col items-center gap-2">
-                  <Clock className="w-6 h-6 text-gold" />
+                <div className="flex flex-col items-center gap-2 text-pearl-foreground">
+                  <Clock className="w-6 h-6 text-clinic-green" />
                   <span className="font-display font-semibold">Horario</span>
                   <span className="text-muted-foreground text-sm">Lun-Vie 8:00–17:00<br />Sáb 8:00–14:00</span>
                 </div>
@@ -179,8 +184,8 @@ const Index = () => {
             </div>
 
             <div className="max-w-4xl mx-auto">
-              <h3 className="font-display text-2xl text-noir-foreground font-bold mb-6 text-center">Encuéntranos</h3>
-              <div className="rounded-xl overflow-hidden gold-border">
+              <h3 className="font-display text-2xl text-pearl-foreground font-bold mb-6 text-center">Encuéntranos</h3>
+              <div className="rounded-xl overflow-hidden border border-clinic-green/20">
                 <a href="https://maps.app.goo.gl/Ku3FFCzB6b9RB5sm9" target="_blank" rel="noopener noreferrer" className="block w-full">
                   <iframe
                     src="https://maps.google.com/maps?q=Cl%C3%ADnica+Odontol%C3%B3gica+Salud+Oriente+Novocentro+Puerto+La+Cruz+Anzoategui+Venezuela&t=&z=18&ie=UTF8&iwloc=&output=embed"
@@ -201,7 +206,8 @@ const Index = () => {
 
       {/* ── FOOTER ── */}
       <footer className="noir-gradient py-10 border-t border-noir-light/20">
-        <div className="container mx-auto px-4 text-center space-y-3">
+        <div className="container mx-auto px-4 text-center space-y-4">
+          <img src={logoWhite} alt="Salud Oriente" className="h-12 w-auto mx-auto mb-2" />
           <p className="text-noir-foreground/90 text-xl md:text-2xl font-display font-semibold italic">
             "Tu sonrisa merece lo mejor..."
           </p>
@@ -219,7 +225,7 @@ const Index = () => {
         href={WA_LINK}
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-[0_4px_20px_hsla(43,78%,62%,0.3)] hover:scale-110 transition-transform"
         aria-label="Contactar por WhatsApp"
       >
         <MessageCircle className="w-7 h-7" />
