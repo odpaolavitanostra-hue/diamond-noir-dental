@@ -184,7 +184,7 @@ const Index = () => {
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto -mt-32 relative z-10 bg-card rounded-2xl shadow-xl border border-clinic-green/10 p-8 md:p-12 mb-12">
               <div className="flex justify-center mb-6">
-                <img src={logoGreen} alt="Clínica Odontológica Salud Oriente" className="h-20 w-auto" />
+                <img src={logoGreen} alt="Clínica Odontológica Salud Oriente" className="h-[80px] md:h-[100px] w-auto max-w-[300px]" />
               </div>
               <h2 className="font-display text-2xl md:text-3xl font-bold mb-6 text-center text-pearl-foreground">
                 ¿Listo para tu nueva <span className="text-clinic-green">sonrisa</span>?
