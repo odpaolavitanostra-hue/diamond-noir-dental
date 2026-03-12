@@ -139,7 +139,7 @@ const Index = () => {
               <img
                 src={logoHeaderWhite}
                 alt="Clínica Odontológica Salud Oriente"
-                className="h-[40px] md:h-[55px] lg:h-[65px] w-auto object-contain mx-auto mb-2 drop-shadow-[0_2px_10px_rgba(232,192,86,0.2)]"
+                className="h-[55px] md:h-[75px] lg:h-[90px] w-auto object-contain mx-auto mb-4 drop-shadow-[0_2px_12px_rgba(232,192,86,0.25)]"
               />
               <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-noir-foreground font-bold leading-tight mb-6 animate-fade-up-delay-1">
                 Odontología Estética e Implantes en{" "}
