@@ -139,14 +139,14 @@ const Index = () => {
               <img
                 src={logoHeaderWhite}
                 alt="Clínica Odontológica Salud Oriente"
-                className="h-[40px] md:h-[55px] lg:h-[65px] w-auto object-contain mx-auto mb-2 drop-shadow-[0_2px_10px_rgba(232,192,86,0.2)]"
+                className="h-[55px] md:h-[75px] lg:h-[90px] w-auto object-contain mx-auto mb-4 drop-shadow-[0_2px_12px_rgba(232,192,86,0.25)]"
               />
               <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-noir-foreground font-bold leading-tight mb-6 animate-fade-up-delay-1">
                 Odontología Estética e Implantes en{" "}
                 <span className="text-gold">Puerto La Cruz</span>
               </h1>
               <p className="text-noir-foreground/80 text-lg md:text-xl mb-10 max-w-xl mx-auto animate-fade-up-delay-2 leading-relaxed">
-                Tu sonrisa merece lo mejor...
+                ¿Listo para tu nueva sonrisa?
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up-delay-3">
                 <button
@@ -245,7 +245,7 @@ const Index = () => {
         <div className="container mx-auto px-4 text-center space-y-4">
           <img src={logoWhite} alt="Salud Oriente" className="h-[140px] md:h-[180px] lg:h-[200px] w-auto max-w-[90%] mx-auto drop-shadow-[0_2px_10px_rgba(232,192,86,0.15)]" />
           <p className="text-noir-foreground/90 text-lg md:text-xl font-display font-semibold italic">
-            "¿Listo para tu nueva sonrisa?"
+            "Tu sonrisa merece lo mejor..."
           </p>
 
           {/* Instagram CTA */}
