@@ -146,7 +146,7 @@ const Index = () => {
                 <span className="text-gold">Puerto La Cruz</span>
               </h1>
               <p className="text-noir-foreground/80 text-lg md:text-xl mb-10 max-w-xl mx-auto animate-fade-up-delay-2 leading-relaxed">
-                Tu sonrisa merece lo mejor...
+                ¿Listo para tu nueva sonrisa?
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up-delay-3">
                 <button
