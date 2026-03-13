@@ -170,7 +170,8 @@ const InvoiceGenerator = ({ open, onOpenChange, appointment, doctor, finance, ta
               <span>Total VES</span>
               <span className="font-bold text-primary">Bs. {formatVES(amountVES)}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Tasa BCV: {tasaBCV.toFixed(2)} Bs/$</p>
+            <p className="text-xs text-muted-foreground mt-1">Tasa BCV ({formattedDate}): {historicalRate.toFixed(2)} Bs/$</p>
+            <p className="text-[10px] text-muted-foreground italic mt-1">* Tasa BCV vigente para la fecha del tratamiento</p>
           </div>
 
           <div className="flex items-center gap-2">
