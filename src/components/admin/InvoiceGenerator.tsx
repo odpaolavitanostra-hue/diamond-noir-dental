@@ -60,8 +60,8 @@ const InvoiceGenerator = ({ open, onOpenChange, appointment, doctor, finance, ta
         .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #435A53; padding-bottom: 20px; margin-bottom: 30px; }
         .clinic-name { font-family: 'Playfair Display', Georgia, serif; font-size: 24px; font-weight: bold; color: #1a1a1a; }
         .clinic-info { font-size: 11px; color: #666; margin-top: 4px; line-height: 1.6; }
-        .invoice-title { font-family: 'Playfair Display', Georgia, serif; font-size: 28px; color: #435A53; text-align: right; }
-        .invoice-number { font-size: 14px; color: #666; text-align: right; margin-top: 4px; }
+        .invoice-title { font-family: 'Playfair Display', Georgia, serif; font-size: 32px; font-weight: bold; color: #435A53; text-align: right; }
+        .invoice-number { font-size: 16px; color: #444; text-align: right; margin-top: 6px; }
         .section { margin-bottom: 24px; }
         .section-title { font-size: 12px; font-weight: 600; color: #435A53; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
