@@ -78,12 +78,15 @@ const InvoiceGenerator = ({ open, onOpenChange, appointment, doctor, finance, ta
       </style></head>
       <body>
         <div class="header">
-          <div>
-            <div class="clinic-name">🦷 ${CLINIC_INFO.name}</div>
-            <div class="clinic-info">
-              RIF: ${CLINIC_INFO.rif}<br>
-              ${CLINIC_INFO.address}<br>
-              Tel: ${CLINIC_INFO.phone} • ${CLINIC_INFO.email}
+          <div style="display:flex;align-items:center;gap:16px;">
+            <img src="/images/logo-green.png" alt="Logo" style="height:70px;object-fit:contain;" />
+            <div>
+              <div class="clinic-name">${CLINIC_INFO.name}</div>
+              <div class="clinic-info">
+                RIF: ${CLINIC_INFO.rif}<br>
+                ${CLINIC_INFO.address}<br>
+                Tel: ${CLINIC_INFO.phone} • ${CLINIC_INFO.email}
+              </div>
             </div>
           </div>
           <div>
