@@ -33,6 +33,7 @@ export const AdminCalendar = () => {
     patientName: "", patientCedula: "", patientPhone: "", patientEmail: "",
     doctorId: doctors[0]?.id || "", date: "", time: "", treatment: treatments[0]?.name || "", notes: "",
     customPrice: "" as string, otrosMotivo: "",
+    paymentMethod: "", paymentReference: "",
   });
   const [payingAppId, setPayingAppId] = useState<string | null>(null);
 
