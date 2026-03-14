@@ -1,7 +1,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, CalendarDays, DollarSign, Users, Check, Package, Upload, FileText, Camera, Save, Edit2, X, Bell, Stethoscope, ChevronDown, ChevronUp, MessageCircle, User, ClipboardList } from "lucide-react";
+import { LogOut, CalendarDays, DollarSign, Users, Check, Package, Upload, FileText, Camera, Save, Edit2, X, Bell, Stethoscope, ChevronDown, ChevronUp, MessageCircle, User, ClipboardList, Moon, Sun } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
 import { useClinicData } from "@/hooks/useClinicData";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,6 +44,7 @@ const DoctorPanel = () => {
   const [odontogramAppId, setOdontogramAppId] = useState<string | null>(null);
   const [odontogramNotes, setOdontogramNotes] = useState("");
   const odontogram = useOdontogram();
+  const { isDark, toggle: toggleTheme } = useTheme();
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/login");
@@ -218,6 +220,9 @@ const DoctorPanel = () => {
                 </div>
               )}
             </div>
+            <button onClick={toggleTheme} className="text-noir-foreground/60 hover:text-primary transition-colors p-1" title={isDark ? "Modo claro" : "Modo oscuro"}>
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
             <button onClick={handleLogout} className="text-noir-foreground/60 hover:text-primary transition-colors flex items-center gap-1 text-sm">
               <LogOut className="w-4 h-4" /> <span className="hidden sm:inline">Salir</span>
             </button>
