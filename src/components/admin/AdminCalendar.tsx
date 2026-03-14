@@ -112,14 +112,39 @@ export const AdminCalendar = () => {
     const finalPrice = f.customPrice !== "" ? parseFloat(f.customPrice) : (treat?.priceUSD || 0);
     const finalNotes = effectiveTreatment === "Otros" && f.otrosMotivo ? `Motivo: ${f.otrosMotivo}${f.notes ? ` | ${f.notes}` : ""}` : f.notes;
 
-    await addAppointment({
+    const hasPay = !!f.paymentMethod;
+    const isDigitalMethod = ["pago_movil", "transferencia", "zelle", "binance"].includes(f.paymentMethod);
+    if (hasPay && isDigitalMethod && !f.paymentReference.trim()) {
+      toast.error("Los pagos digitales requieren número de referencia");
+      return;
+    }
+
+    const newApp = await addAppointment({
       patientName: f.patientName, patientPhone: f.patientPhone,
       patientCedula: f.patientCedula, patientEmail: f.patientEmail,
       doctorId: effectiveDoctorId, date: f.date, time: f.time,
       treatment: effectiveTreatment, priceUSD: finalPrice,
-      status: "pendiente", notes: finalNotes,
+      status: hasPay ? "pagada" : "pendiente", notes: finalNotes,
+      paymentMethod: hasPay ? f.paymentMethod : undefined,
+      paymentReference: hasPay ? f.paymentReference : undefined,
     });
-    toast.success("Cita agendada");
+
+    if (hasPay && newApp) {
+      await addTransaction({
+        date: f.date,
+        type: "ingreso",
+        description: `Pago cita: ${effectiveTreatment}`,
+        entityName: f.patientName,
+        amountUSD: finalPrice,
+        amountVES: finalPrice * tasaBCV,
+        tasaBCV,
+        paymentMethod: f.paymentMethod,
+        paymentReference: f.paymentReference,
+        appointmentId: typeof newApp === 'object' && newApp !== null && 'id' in newApp ? (newApp as any).id : undefined,
+      });
+    }
+
+    toast.success(hasPay ? "Cita agendada con pago registrado" : "Cita agendada");
     setShowBooking(false);
     setBookingForm({ patientName: "", patientCedula: "", patientPhone: "", patientEmail: "", doctorId: doctors[0]?.id || "", date: "", time: "", treatment: treatments[0]?.name || "", notes: "", customPrice: "", otrosMotivo: "", paymentMethod: "", paymentReference: "" });
   };
