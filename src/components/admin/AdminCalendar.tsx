@@ -121,7 +121,7 @@ export const AdminCalendar = () => {
     });
     toast.success("Cita agendada");
     setShowBooking(false);
-    setBookingForm({ patientName: "", patientCedula: "", patientPhone: "", patientEmail: "", doctorId: doctors[0]?.id || "", date: "", time: "", treatment: treatments[0]?.name || "", notes: "", customPrice: "", otrosMotivo: "" });
+    setBookingForm({ patientName: "", patientCedula: "", patientPhone: "", patientEmail: "", doctorId: doctors[0]?.id || "", date: "", time: "", treatment: treatments[0]?.name || "", notes: "", customPrice: "", otrosMotivo: "", paymentMethod: "", paymentReference: "" });
   };
 
   const selectExistingPatient = (p: typeof patients[0]) => {
