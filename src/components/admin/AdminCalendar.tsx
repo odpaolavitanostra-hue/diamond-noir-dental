@@ -334,6 +334,33 @@ export const AdminCalendar = () => {
             <div><label className="block text-sm font-medium mb-1">Fecha</label><input type="date" min={todayStr} className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={bookingForm.date} onChange={(e) => setBookingForm((p) => ({ ...p, date: e.target.value, time: "" }))} /></div>
             <div><label className="block text-sm font-medium mb-1">Hora</label><select className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border" value={bookingForm.time} onChange={(e) => setBookingForm((p) => ({ ...p, time: e.target.value }))}><option value="">Seleccionar</option>{getBookingTimeSlots().map((t) => <option key={t} value={t}>{t}</option>)}</select></div>
           </div>
+          <div className="bg-muted/50 rounded-lg p-4 space-y-3 border border-border">
+            <label className="block text-sm font-semibold flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-primary" /> Pago inmediato (opcional)
+            </label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <button type="button" onClick={() => setBookingForm((p) => ({ ...p, paymentMethod: "", paymentReference: "" }))} className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${!bookingForm.paymentMethod ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-muted-foreground hover:text-foreground"}`}>Sin pago</button>
+              {[
+                { value: "pago_movil", label: "Pago Móvil" },
+                { value: "transferencia", label: "Transferencia" },
+                { value: "zelle", label: "Zelle" },
+                { value: "binance", label: "Binance" },
+                { value: "efectivo_ves", label: "Efectivo VES" },
+                { value: "efectivo_usd", label: "Efectivo USD" },
+              ].map((m) => (
+                <button key={m.value} type="button" onClick={() => setBookingForm((p) => ({ ...p, paymentMethod: m.value, paymentReference: "" }))} className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${bookingForm.paymentMethod === m.value ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-muted-foreground hover:text-foreground"}`}>{m.label}</button>
+              ))}
+            </div>
+            {["pago_movil", "transferencia", "zelle", "binance"].includes(bookingForm.paymentMethod) && (
+              <div>
+                <label className="block text-xs font-medium mb-1">Nº de Referencia *</label>
+                <input type="text" className="w-full bg-card rounded-lg px-3 py-2 text-sm border border-border focus:border-primary focus:outline-none" placeholder="Número de referencia" value={bookingForm.paymentReference} onChange={(e) => setBookingForm((p) => ({ ...p, paymentReference: e.target.value }))} />
+              </div>
+            )}
+            {bookingForm.paymentMethod && (
+              <p className="text-xs text-clinic-green font-medium">✅ La cita se registrará como "Pagada" directamente</p>
+            )}
+          </div>
           <textarea className="w-full bg-muted rounded-lg px-3 py-2 text-sm border border-border resize-none" rows={2} placeholder="Notas (opcional)" value={bookingForm.notes} onChange={(e) => setBookingForm((p) => ({ ...p, notes: e.target.value }))} />
           <div className="flex gap-2">
             <button onClick={handleBookingSubmit} className="bg-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-semibold">Agendar</button>
